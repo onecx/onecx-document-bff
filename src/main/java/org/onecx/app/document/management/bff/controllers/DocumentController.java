@@ -11,8 +11,6 @@ import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.resteasy.reactive.server.multipart.MultipartFormDataInput;
 import org.onecx.app.document.management.bff.mappers.DocumentMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import gen.org.tkit.onecx.document_management.client.api.DocumentControllerV1Api;
 import gen.org.tkit.onecx.document_management.rs.internal.DocumentControllerV1ApiService;
@@ -20,7 +18,6 @@ import gen.org.tkit.onecx.document_management.rs.internal.model.*;
 
 @ApplicationScoped
 public class DocumentController implements DocumentControllerV1ApiService {
-    private static final Logger log = LoggerFactory.getLogger(DocumentController.class);
     @Inject
     @RestClient
     DocumentControllerV1Api documentControllerV1Api;
@@ -87,12 +84,9 @@ public class DocumentController implements DocumentControllerV1ApiService {
     }
 
     @Override
-    public Response getDocumentByCriteria(String channelName, String createdBy, String endDate, String id, String name,
-            String objectReferenceId, String objectReferenceType, Integer page, Integer size, String startDate,
-            List<LifeCycleStateDTO> state, List<String> typeId) {
-        try (Response response = documentControllerV1Api.getDocumentByCriteria(channelName, createdBy, endDate, id, name,
-                objectReferenceId, objectReferenceType, page,
-                size, startDate, mapper.mapLifeCycle(state), typeId)) {
+    public Response getDocumentByCriteria(DocumentSearchCriteriaDTO criteriaDTO) {
+        var internalCriteria = mapper.mapToInternalCriteria(criteriaDTO);
+        try (Response response = documentControllerV1Api.getDocumentByCriteria(internalCriteria)) {
             return Response.status(response.getStatus())
                     .entity(mapper.map(response.readEntity(PageResultDTO.class)))
                     .build();
@@ -130,12 +124,9 @@ public class DocumentController implements DocumentControllerV1ApiService {
     }
 
     @Override
-    public Response showAllDocumentsByCriteria(String channelName, String createdBy, String endDate, String id, String name,
-            String objectReferenceId, String objectReferenceType, Integer page, Integer size, String startDate,
-            List<LifeCycleStateDTO> state, List<String> typeId) {
-        try (Response response = documentControllerV1Api.showAllDocumentsByCriteria(channelName, createdBy, endDate, id, name,
-                objectReferenceId, objectReferenceType,
-                page, size, startDate, mapper.mapLifeCycle(state), typeId)) {
+    public Response showAllDocumentsByCriteria(DocumentSearchCriteriaDTO criteriaDTO) {
+        var internalCriteria = mapper.mapToInternalCriteria(criteriaDTO);
+        try (Response response = documentControllerV1Api.showAllDocumentsByCriteria(internalCriteria)) {
             return Response.status(response.getStatus())
                     .entity(mapper.mapDetailList(response.readEntity(new GenericType<List<DocumentDetailDTO>>() {
                     })))
