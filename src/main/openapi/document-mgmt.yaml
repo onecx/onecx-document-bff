@@ -13,88 +13,6 @@ tags:
 
 paths:
   /document:
-    get:
-      x-onecx:
-        permissions:
-          document:
-            - read
-      tags:
-        - DocumentControllerV1
-      description: Gets documents by criteria
-      operationId: getDocumentByCriteria
-      parameters:
-        - name: channelName
-          in: query
-          schema:
-            type: string
-        - name: createdBy
-          in: query
-          schema:
-            type: string
-        - name: endDate
-          in: query
-          schema:
-            type: string
-        - name: id
-          in: query
-          schema:
-            type: string
-        - name: name
-          in: query
-          schema:
-            type: string
-        - name: objectReferenceId
-          in: query
-          schema:
-            type: string
-        - name: objectReferenceType
-          in: query
-          schema:
-            type: string
-        - name: page
-          in: query
-          schema:
-            format: int32
-            default: 0
-            minimum: 0
-            type: integer
-        - name: size
-          in: query
-          schema:
-            format: int32
-            default: 200
-            maximum: 200
-            minimum: 1
-            type: integer
-        - name: startDate
-          in: query
-          schema:
-            type: string
-        - name: state
-          in: query
-          schema:
-            type: array
-            items:
-              $ref: '#/components/schemas/LifeCycleState'
-        - name: typeId
-          in: query
-          schema:
-            type: array
-            items:
-              type: string
-      responses:
-        "200":
-          description: The corresponding documents resource
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PageResult'
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RFCProblem'
     post:
       x-onecx:
         permissions:
@@ -122,6 +40,34 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DocumentDetail'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RFCProblem'
+  /document/search:
+    post:
+      x-onecx:
+        permissions:
+          document:
+            - read
+      tags:
+        - DocumentControllerV1
+      description: Gets documents by criteria
+      operationId: getDocumentByCriteria
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentSearchCriteria'
+      responses:
+        "200":
+          description: The corresponding documents resource
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageResult'
         "400":
           description: Bad Request
           content:
@@ -604,8 +550,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RFCProblem'
-  /document/show-all-documents:
-    get:
+  /document/search/show-all-documents:
+    post:
       x-onecx:
         permissions:
           document:
@@ -614,66 +560,11 @@ paths:
         - DocumentControllerV1
       description: Gets all documents by criteria
       operationId: showAllDocumentsByCriteria
-      parameters:
-        - name: channelName
-          in: query
-          schema:
-            type: string
-        - name: createdBy
-          in: query
-          schema:
-            type: string
-        - name: endDate
-          in: query
-          schema:
-            type: string
-        - name: id
-          in: query
-          schema:
-            type: string
-        - name: name
-          in: query
-          schema:
-            type: string
-        - name: objectReferenceId
-          in: query
-          schema:
-            type: string
-        - name: objectReferenceType
-          in: query
-          schema:
-            type: string
-        - name: page
-          in: query
-          schema:
-            format: int32
-            default: 0
-            minimum: 0
-            type: integer
-        - name: size
-          in: query
-          schema:
-            format: int32
-            default: 200
-            maximum: 200
-            minimum: 1
-            type: integer
-        - name: startDate
-          in: query
-          schema:
-            type: string
-        - name: state
-          in: query
-          schema:
-            type: array
-            items:
-              $ref: '#/components/schemas/LifeCycleState'
-        - name: typeId
-          in: query
-          schema:
-            type: array
-            items:
-              type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentSearchCriteria"
       responses:
         "200":
           description: The corresponding documents resource

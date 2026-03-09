@@ -54,4 +54,6 @@ public interface DocumentMapper {
 
     DocumentType mapDocumentType(DocumentTypeDTO documentTypeDTO);
 
+    DocumentSearchCriteria mapToInternalCriteria(DocumentSearchCriteriaDTO searchCriteriaDTO);
+
 }
