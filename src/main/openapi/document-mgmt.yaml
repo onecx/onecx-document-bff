@@ -481,12 +481,21 @@ paths:
         "200":
           description: OK
           content:
-            application/octet-stream:
+            application/json:
               schema:
-                format: binary
-                type: string
+                $ref: '#/components/schemas/AttachmentPresignedUrlResponse'
         "404":
           description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetailResponse'
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetailResponse'
   /document/file/{documentId}/attachments:
     get:
       x-onecx:
@@ -519,6 +528,58 @@ paths:
           description: Bad request
         "204":
           description: No content
+  /document/{documentId}/files/metadata:
+    patch:
+      x-onecx:
+        permissions:
+          document:
+            - write
+      tags:
+        - DocumentControllerV1
+      operationId: updateAttachmentsMetadata
+      description: Update attachment metadata for specified document
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/UpdateFileMetadataRequest"
+      responses:
+        "200":
+          description: Metadata updated
+  /document/{documentId}/files/audit-log:
+    patch:
+      x-onecx:
+        permissions:
+          document:
+            - write
+      tags:
+        - DocumentControllerV1
+      operationId: createFailedAttachmentsAuditLogs
+      description: Create audit logs for failed attachments
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/UpdateFileMetadataRequest"
+      responses:
+        "201":
+          description: Audit logs created
   /document/files/upload/failed/{id}:
     get:
       x-onecx:
@@ -942,25 +1003,32 @@ paths:
       requestBody:
         required: true
         content:
-          multipart/form-data:
+          application/json:
             schema:
-              type: object
-              properties:
-                files:
-                  type: MultipartFormDataInput
-                  description: upload the multipart files
+              type: array
+              items:
+                $ref: '#/components/schemas/UploadAttachmentPresignedUrlRequest'
       responses:
-        '201':
-          description: Created
+        '200':
+          description: Ok
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DocumentResponse'
+                type: array
+                items:
+                  $ref: '#/components/schemas/UploadAttachmentPresignedUrlResponse'
         '400':
           description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetailResponse'
         '404':
           description: Not found
-
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetailResponse'
 components:
   schemas:
     AttachmentCreateUpdate:
@@ -1696,6 +1764,33 @@ components:
               additionalProperties:
                 type: integer
               description: Map of attachment names to their response codes
+    AttachmentPresignedUrlResponse:
+      properties:
+        url:
+          type: string
+        expiration:
+          type: string
+          format: date-time
+    UploadAttachmentPresignedUrlRequest:
+      properties:
+        fileName:
+          type: string
+        attachmentId:
+          type: string
+    UploadAttachmentPresignedUrlResponse:
+      properties:
+        url:
+          type: string
+        expiration:
+          type: string
+          format: date-time
+        attachmentId:
+          type: string
+    UpdateFileMetadataRequest:
+      type: object
+      properties:
+        attachmentId:
+          type: string
     FileMultipartBody:
       type: object
       properties:
@@ -1713,3 +1808,32 @@ components:
         bucket:
           type: string
           description: Name of bucket.
+    ProblemDetailResponse:
+      type: object
+      properties:
+        errorCode:
+          type: string
+        detail:
+          type: string
+        params:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProblemDetailParam'
+        invalidParams:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProblemDetailInvalidParam'
+    ProblemDetailParam:
+      type: object
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+    ProblemDetailInvalidParam:
+      type: object
+      properties:
+        name:
+          type: string
+        message:
+          type: string

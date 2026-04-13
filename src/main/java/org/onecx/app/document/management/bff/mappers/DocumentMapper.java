@@ -5,9 +5,12 @@ import java.util.List;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.onecx.app.document.management.bff.model.MetadataResult;
+import org.onecx.app.document.management.bff.model.UploadUrlResult;
 
 import gen.org.tkit.onecx.document_management.client.model.*;
 import gen.org.tkit.onecx.document_management.rs.internal.model.*;
+import gen.org.tkit.onecx.filestorage.client.model.PresignedUrlResponse;
 
 @Mapper
 public interface DocumentMapper {
@@ -56,4 +59,11 @@ public interface DocumentMapper {
 
     DocumentSearchCriteria mapToInternalCriteria(DocumentSearchCriteriaDTO searchCriteriaDTO);
 
+    List<UploadAttachmentPresignedUrlResponseDTO> mapUploadResponse(List<UploadUrlResult> uploadResults);
+
+    AttachmentPresignedUrlResponseDTO mapPresignedUrl(PresignedUrlResponse response);
+
+    @Mapping(target = "size", source = "response.size")
+    @Mapping(target = "type", source = "response.type")
+    AttachmentMetadataUpload mapToMetadataUpload(MetadataResult metadataResults);
 }

@@ -5,14 +5,19 @@ import java.util.List;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.GenericType;
 import jakarta.ws.rs.core.Response;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
-import org.jboss.resteasy.reactive.server.multipart.MultipartFormDataInput;
+import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
+import org.onecx.app.document.management.bff.exception.RestException;
 import org.onecx.app.document.management.bff.mappers.DocumentMapper;
+import org.onecx.app.document.management.bff.mappers.ExceptionMapper;
+import org.onecx.app.document.management.bff.service.AttachmentService;
 
 import gen.org.tkit.onecx.document_management.client.api.DocumentControllerV1Api;
+import gen.org.tkit.onecx.document_management.client.model.DocumentDetail;
 import gen.org.tkit.onecx.document_management.rs.internal.DocumentControllerV1ApiService;
 import gen.org.tkit.onecx.document_management.rs.internal.model.*;
 
@@ -24,6 +29,12 @@ public class DocumentController implements DocumentControllerV1ApiService {
 
     @Inject
     DocumentMapper mapper;
+
+    @Inject
+    AttachmentService fileService;
+
+    @Inject
+    ExceptionMapper exceptionMapper;
 
     @Override
     public Response bulkUpdateDocument(List<DocumentCreateUpdateDTO> documentCreateUpdateDTOS) {
@@ -52,7 +63,10 @@ public class DocumentController implements DocumentControllerV1ApiService {
 
     @Override
     public Response deleteDocumentById(String id) {
+        var docDetail = documentControllerV1Api.getDocumentById(id).readEntity(DocumentDetail.class);
+        var attachments = docDetail.getAttachments();
         try (Response response = documentControllerV1Api.deleteDocumentById(id)) {
+            fileService.deleteDocumentAttachmentFiles(attachments);
             return Response.status(response.getStatus()).build();
         }
     }
@@ -116,11 +130,10 @@ public class DocumentController implements DocumentControllerV1ApiService {
 
     @Override
     public Response getFile(String attachmentId) {
-        try (Response response = documentControllerV1Api.getFile(attachmentId)) {
-            return Response.status(response.getStatus())
-                    .entity(response.readEntity(File.class))
-                    .build();
-        }
+        var presignedUrl = fileService.getFilePresignedUrl(attachmentId);
+        return Response
+                .ok(mapper.mapPresignedUrl(presignedUrl))
+                .build();
     }
 
     @Override
@@ -144,14 +157,38 @@ public class DocumentController implements DocumentControllerV1ApiService {
     }
 
     @Override
-    public Response uploadAllFiles(String documentId, MultipartFormDataInput files) {
-        DocumentControllerV1Api.UploadAllFilesMultipartForm multipart = new DocumentControllerV1Api.UploadAllFilesMultipartForm();
-        multipart.files = files;
+    public Response uploadAllFiles(String documentId, List<UploadAttachmentPresignedUrlRequestDTO> request) {
+        final var documentDetail = documentControllerV1Api.getDocumentById(documentId)
+                .readEntity(DocumentDetail.class);
+        final var uploadResults = fileService.getUploadPresignedUrls(documentDetail, request);
+        return Response.ok()
+                .entity(mapper.mapUploadResponse(uploadResults))
+                .build();
+    }
 
-        try (Response response = documentControllerV1Api.uploadAllFiles(multipart, documentId)) {
-            return Response.status(response.getStatus())
-                    .entity(mapper.map(response.readEntity(DocumentResponseDTO.class)))
-                    .build();
-        }
+    @Override
+    public Response updateAttachmentsMetadata(String documentId,
+            List<UpdateFileMetadataRequestDTO> updateFileMetadataRequestDTO) {
+        final var documentDetail = documentControllerV1Api.getDocumentById(documentId)
+                .readEntity(DocumentDetail.class);
+        return fileService.updateAttachmentsMetadata(documentDetail, updateFileMetadataRequestDTO);
+    }
+
+    @Override
+    public Response createFailedAttachmentsAuditLogs(String documentId,
+            List<UpdateFileMetadataRequestDTO> updateFileMetadataRequestDTO) {
+        return fileService.createAttachmentsAuditLogs(documentId, updateFileMetadataRequestDTO);
+    }
+
+    @ServerExceptionMapper(priority = 1)
+    public Response handleRestException(RestException restException) {
+        return Response.status(restException.getStatus())
+                .entity(exceptionMapper.map(restException))
+                .build();
+    }
+
+    @ServerExceptionMapper
+    public Response handleClientWebApplicationException(WebApplicationException webApplicationException) {
+        return webApplicationException.getResponse();
     }
 }
