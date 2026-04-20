@@ -1,0 +1,80 @@
+
+include::onecx-document-bff-attributes.adoc[opts=optional]
+
+{docker-registry}[Link to Docker registry]
+
+== Default properties
+
+.{properties-file}
+[%collapsible]
+====
+[source,properties,subs=attributes+]
+----
+quarkus.http.auth.permission.health.paths=/q/*
+quarkus.http.auth.permission.health.policy=permit
+quarkus.http.auth.permission.default.paths=/*
+quarkus.http.auth.permission.default.policy=authenticated
+onecx.permissions.application-id=${quarkus.application.name}
+%prod.quarkus.rest-client.onecx_document_svc.url = http://onecx-document-svc:8080
+org.eclipse.microprofile.rest.client.propagateHeaders=apm-principal-token
+quarkus.http.limits.max-body-size=20240K
+quarkus.openapi-generator.codegen.input-base-dir=target/tmp/openapi
+quarkus.openapi-generator.codegen.spec.onecx_document_svc_yaml.config-key=onecx_document_svc
+quarkus.openapi-generator.codegen.spec.onecx_document_svc_yaml.base-package=gen.org.tkit.onecx.document.client
+quarkus.openapi-generator.codegen.spec.onecx_document_svc_yaml.return-response=true
+quarkus.openapi-generator.codegen.spec.onecx_document_svc_yaml.additional-api-type-annotations=@org.eclipse.microprofile.rest.client.annotation.RegisterClientHeaders;
+quarkus.openapi-generator.codegen.spec.onecx_document_svc_yaml.enable-security-generation=false
+quarkus.openapi-generator.codegen.spec.onecx_document_svc_yaml.import-mappings=MultipartFormDataInput=org.jboss.resteasy.reactive.server.multipart.MultipartFormDataInput
+quarkus.openapi-generator.codegen.spec.onecx_document_svc_yaml.type-mappings.File=java.io.File
+quarkus.openapi-generator.codegen.spec.onecx_document_svc_yaml.type-mappings.MultipartFormDataInput=org.jboss.resteasy.reactive.server.multipart.MultipartFormDataInput
+quarkus.openapi-generator.codegen.spec.onecx_file_storage_svc_yaml.config-key=onecx_file_storage_svc
+quarkus.openapi-generator.codegen.spec.onecx_file_storage_svc_yaml.base-package=gen.org.tkit.onecx.filestorage.client
+quarkus.openapi-generator.codegen.spec.onecx_file_storage_svc_yaml.return-response=true
+quarkus.openapi-generator.codegen.spec.onecx_file_storage_svc_yaml.enable-security-generation=false
+onecx.onecx.document.file-storage.product-name=onecx-document
+onecx.onecx.document.file-storage.application-id=onecx-document-bff
+onecx.onecx.document.file-storage.file-name-separator=_
+%prod.quarkus.rest-client.onecx_document_svc.providers=io.quarkus.oidc.client.reactive.filter.OidcClientRequestReactiveFilter
+%prod.quarkus.oidc-client.client-id=${quarkus.application.name}
+----
+====
+
+== Extensions
+.Extensions List
+[%collapsible]
+====
+include::onecx-document-bff-extensions.adoc[opts=optional]
+====
+
+== Helm
+
+{helm-registry}[Link to Helm registry]
+
+.Default values in {helm-file}
+[source,yaml]
+----
+app:
+  name: bff
+  image:
+    repository: "onecx/onecx-document-bff"
+  operator:
+    # Permission
+    permission:
+      enabled: true
+      spec:
+        permissions:
+          document:
+            read: permission on all GET requests and POST search
+            write: permission on PUT, POST, PATCH requests, where objects are saved or updated
+            delete: permission on all DELETE requests
+    keycloak:
+      client:
+        enabled: true
+        spec:
+          kcConfig:
+            defaultClientScopes: [ ocx-doc:all,ocx-fs:read, ocx-fs:write, ocx-fs:delete, ocx-pm:read ]
+    microservice:
+      spec:
+        description: OneCX Document Backend For Frontend
+        name: OneCX Document BFF
+----

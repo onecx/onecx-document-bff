@@ -1,0 +1,66 @@
+package org.tkit.onecx.document.bff.mappers;
+
+import java.util.List;
+
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.tkit.onecx.document.bff.models.MetadataResult;
+import org.tkit.onecx.document.bff.models.UploadUrlResult;
+
+import gen.org.tkit.onecx.document.client.model.*;
+import gen.org.tkit.onecx.document.rs.internal.model.*;
+import gen.org.tkit.onecx.filestorage.client.model.PresignedUrlResponse;
+
+@Mapper
+public interface DocumentMapper {
+    DocumentCreateUpdate map(DocumentCreateUpdateDTO documentCreateUpdateDTO);
+
+    List<DocumentCreateUpdate> map(List<DocumentCreateUpdateDTO> documentCreateUpdateDTO);
+
+    @Mapping(target = "_file", ignore = true)
+    AttachmentCreateUpdate map(AttachmentCreateUpdateDTO attachmentCreateUpdateDTO);
+
+    LifeCycleState map(LifeCycleStateDTO lifeCycleStateDTO);
+
+    List<LifeCycleState> mapLifeCycle(List<LifeCycleStateDTO> lifeCycleStateDTO);
+
+    DocumentSpecificationCreateUpdate map(DocumentSpecificationCreateUpdateDTO documentSpecificationCreateUpdateDTO);
+
+    DocumentTypeCreateUpdate map(DocumentTypeCreateUpdateDTO documentTypeCreateUpdateDTO);
+
+    SupportedMimeType map(SupportedMimeTypeDTO supportedMimeTypeDTO);
+
+    List<SupportedMimeType> mapMimeTypeList(List<SupportedMimeTypeDTO> supportedMimeTypeDTOS);
+
+    SupportedMimeTypeCreateUpdate map(SupportedMimeTypeCreateUpdateDTO supportedMimeTypeCreateUpdateDTO);
+
+    DocumentDetail map(DocumentDetailDTO documentDetailDTO);
+
+    List<DocumentDetail> mapDetailList(List<DocumentDetailDTO> documentDetailDTOList);
+
+    Channel map(ChannelDTO channelDTO);
+
+    List<Channel> mapChannel(List<ChannelDTO> channelDTOS);
+
+    List<StorageUploadAudit> mapAuditList(List<StorageUploadAuditDTO> storageUploadAuditDTOS);
+
+    DocumentSpecification map(DocumentSpecificationDTO documentSpecificationDTO);
+
+    List<DocumentSpecification> mapSpecification(List<DocumentSpecificationDTO> documentSpecificationDTOS);
+
+    List<DocumentType> mapType(List<DocumentTypeDTO> documentTypeDTOS);
+
+    DocumentType mapDocumentType(DocumentTypeDTO documentTypeDTO);
+
+    DocumentSearchCriteria mapToInternalCriteria(DocumentSearchCriteriaDTO searchCriteriaDTO);
+
+    List<UploadAttachmentPresignedUrlResponseDTO> mapUploadResponse(List<UploadUrlResult> uploadResults);
+
+    AttachmentPresignedUrlResponseDTO mapPresignedUrl(PresignedUrlResponse response);
+
+    DocumentPageResult map(DocumentPageResultDTO pageResultDTO);
+
+    @Mapping(target = "size", source = "response.size")
+    @Mapping(target = "type", source = "response.type")
+    AttachmentMetadataUpload mapToMetadataUpload(MetadataResult metadataResults);
+}

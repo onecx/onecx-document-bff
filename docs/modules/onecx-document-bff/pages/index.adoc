@@ -1,0 +1,7 @@
+include::onecx-document-bff-attributes.adoc[opts=optional]
+
+= OneCX Document Backend For Frontend
+
+
+
+include::onecx-document-bff-docs.adoc[opts=optional]
