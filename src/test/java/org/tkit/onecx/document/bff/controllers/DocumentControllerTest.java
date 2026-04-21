@@ -42,7 +42,7 @@ import io.restassured.http.ContentType;
 
 @QuarkusTest
 @TestHTTPEndpoint(DocumentController.class)
-public class DocumentControllerTest extends AbstractTest {
+class DocumentControllerTest extends AbstractTest {
 
     private static final String DOCUMENT_ID = "test-document-id";
     private static final String ATTACHMENT_ID = "test-attachment-id";
