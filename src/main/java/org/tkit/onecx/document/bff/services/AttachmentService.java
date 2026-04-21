@@ -24,6 +24,7 @@ import gen.org.tkit.onecx.document.rs.internal.model.UpdateFileMetadataRequestDT
 import gen.org.tkit.onecx.document.rs.internal.model.UploadAttachmentPresignedUrlRequestDTO;
 import gen.org.tkit.onecx.filestorage.client.api.FileStorageApi;
 import gen.org.tkit.onecx.filestorage.client.model.*;
+import io.quarkus.logging.Log;
 
 @ApplicationScoped
 public class AttachmentService {
@@ -90,8 +91,8 @@ public class AttachmentService {
         var deleteRequests = attachments.stream().map(this::getFileDeleteRequest).toList();
         deleteRequests.forEach(request -> {
             try (var ignored = fileStorageApi.deleteFile(request)) {
-                //ignore
-            } catch (ClientWebApplicationException ex) {
+                Log.info(String.format("Deleted file %s from storage", request.getFileName()));
+            } catch (Exception ex) {
                 throw new ClientWebApplicationException(ex);
             }
         });

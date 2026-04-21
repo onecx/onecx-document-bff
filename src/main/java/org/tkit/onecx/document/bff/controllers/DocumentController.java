@@ -4,13 +4,11 @@ import java.util.List;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.validation.ConstraintViolationException;
 import jakarta.ws.rs.core.GenericType;
 import jakarta.ws.rs.core.Response;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.resteasy.reactive.ClientWebApplicationException;
-import org.jboss.resteasy.reactive.RestResponse;
 import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
 import org.tkit.onecx.document.bff.mappers.DocumentMapper;
 import org.tkit.onecx.document.bff.mappers.ExceptionMapper;
@@ -165,11 +163,6 @@ public class DocumentController implements DocumentControllerApiService {
         try (Response res = fileService.createAttachmentsAuditLogs(documentId, updateFileMetadataRequestDTO)) {
             return Response.status(res.getStatus()).build();
         }
-    }
-
-    @ServerExceptionMapper
-    public RestResponse<ProblemDetailResponseDTO> constraint(ConstraintViolationException ex) {
-        return exceptionMapper.constraint(ex);
     }
 
     @ServerExceptionMapper

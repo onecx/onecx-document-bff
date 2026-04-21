@@ -11,19 +11,19 @@ import io.smallrye.config.WithDefault;
  */
 @ConfigRoot(phase = ConfigPhase.RUN_TIME)
 @ConfigMapping(prefix = "onecx.document.file-storage")
-@ConfigDocFilename("onecx-document-management-bff-docs.adoc")
+@ConfigDocFilename("onecx-document-bff-docs.adoc")
 public interface StorageIntegrationConfig {
 
     /**
      * Name of the product that uploaded file should be identified by
      */
-    @WithDefault("onecx-document-management")
+    @WithDefault("onecx-document")
     String productName();
 
     /**
      * Id of the application that uploaded file should be identified by
      */
-    @WithDefault("onecx-document-management-bff")
+    @WithDefault("onecx-document-bff")
     String applicationId();
 
     /**
