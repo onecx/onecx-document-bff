@@ -27,6 +27,7 @@ quarkus.openapi-generator.codegen.spec.onecx_document_svc_yaml.enable-security-g
 quarkus.openapi-generator.codegen.spec.onecx_document_svc_yaml.import-mappings=MultipartFormDataInput=org.jboss.resteasy.reactive.server.multipart.MultipartFormDataInput
 quarkus.openapi-generator.codegen.spec.onecx_document_svc_yaml.type-mappings.File=java.io.File
 quarkus.openapi-generator.codegen.spec.onecx_document_svc_yaml.type-mappings.MultipartFormDataInput=org.jboss.resteasy.reactive.server.multipart.MultipartFormDataInput
+quarkus.openapi-generator.codegen.spec.onecx_document_svc_yaml.additional-model-type-annotations=@io.quarkus.runtime.annotations.RegisterForReflection;
 quarkus.openapi-generator.codegen.spec.onecx_file_storage_svc_yaml.config-key=onecx_file_storage_svc
 quarkus.openapi-generator.codegen.spec.onecx_file_storage_svc_yaml.base-package=gen.org.tkit.onecx.filestorage.client
 quarkus.openapi-generator.codegen.spec.onecx_file_storage_svc_yaml.return-response=true
