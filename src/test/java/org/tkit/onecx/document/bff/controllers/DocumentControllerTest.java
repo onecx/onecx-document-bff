@@ -1,6 +1,7 @@
 package org.tkit.onecx.document.bff.controllers;
 
 import static io.restassured.RestAssured.given;
+import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -37,7 +38,6 @@ import gen.org.tkit.onecx.filestorage.client.model.PresignedUrlResponse;
 import io.quarkiverse.mockserver.test.InjectMockServerClient;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
-import io.restassured.http.ContentType;
 
 @QuarkusTest
 @TestHTTPEndpoint(DocumentController.class)
@@ -102,7 +102,7 @@ class DocumentControllerTest extends AbstractTest {
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
-                .contentType(ContentType.JSON)
+                .contentType(APPLICATION_JSON)
                 .get("/file/{attachmentId}", ATTACHMENT_ID)
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
@@ -129,7 +129,7 @@ class DocumentControllerTest extends AbstractTest {
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
-                .contentType(ContentType.JSON)
+                .contentType(APPLICATION_JSON)
                 .get("/file/{attachmentId}", ATTACHMENT_ID)
                 .then()
                 .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
@@ -150,7 +150,7 @@ class DocumentControllerTest extends AbstractTest {
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
-                .contentType(ContentType.JSON)
+                .contentType(APPLICATION_JSON)
                 .get("/file/{attachmentId}", ATTACHMENT_ID)
                 .then()
                 .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
@@ -185,7 +185,7 @@ class DocumentControllerTest extends AbstractTest {
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
-                .contentType(ContentType.JSON)
+                .contentType(APPLICATION_JSON)
                 .get("/file/{attachmentId}", ATTACHMENT_ID)
                 .then()
                 .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
@@ -238,7 +238,7 @@ class DocumentControllerTest extends AbstractTest {
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
-                .contentType(ContentType.JSON)
+                .contentType(APPLICATION_JSON)
                 .delete("/{id}", DOCUMENT_ID)
                 .then()
                 .statusCode(Response.Status.NO_CONTENT.getStatusCode());
@@ -273,7 +273,7 @@ class DocumentControllerTest extends AbstractTest {
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
-                .contentType(ContentType.JSON)
+                .contentType(APPLICATION_JSON)
                 .delete("/{id}", DOCUMENT_ID)
                 .then()
                 .statusCode(Response.Status.NO_CONTENT.getStatusCode());
@@ -325,7 +325,7 @@ class DocumentControllerTest extends AbstractTest {
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
-                .contentType(ContentType.JSON)
+                .contentType(APPLICATION_JSON)
                 .delete("/{id}", DOCUMENT_ID)
                 .then()
                 .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
@@ -376,7 +376,7 @@ class DocumentControllerTest extends AbstractTest {
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
-                .contentType(ContentType.JSON)
+                .contentType(APPLICATION_JSON)
                 .body(List.of(uploadRequest))
                 .post("/files/upload/{documentId}", DOCUMENT_ID)
                 .then()
@@ -418,7 +418,7 @@ class DocumentControllerTest extends AbstractTest {
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
-                .contentType(ContentType.JSON)
+                .contentType(APPLICATION_JSON)
                 .body(List.of(uploadRequest))
                 .post("/files/upload/{documentId}", DOCUMENT_ID)
                 .then()
@@ -460,7 +460,7 @@ class DocumentControllerTest extends AbstractTest {
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
-                .contentType(ContentType.JSON)
+                .contentType(APPLICATION_JSON)
                 .body(List.of(uploadRequest))
                 .post("/files/upload/{documentId}", DOCUMENT_ID)
                 .then()
@@ -490,7 +490,7 @@ class DocumentControllerTest extends AbstractTest {
                 .withId(SVC_MOCK_ID)
                 .respond(response()
                         .withStatusCode(Response.Status.OK.getStatusCode())
-                        .withContentType(org.mockserver.model.MediaType.APPLICATION_JSON)
+                        .withContentType(MediaType.APPLICATION_JSON)
                         .withBody(JsonBody.json(documentDetail)));
 
         mockServerClient
@@ -505,12 +505,14 @@ class DocumentControllerTest extends AbstractTest {
         uploadRequest.setAttachmentId(ATTACHMENT_ID);
         uploadRequest.setFileName(FILE_NAME);
 
+        List<UploadAttachmentPresignedUrlRequestDTO> requestList = List.of(uploadRequest);
+
         var response = given()
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
-                .contentType(ContentType.JSON)
-                .body(uploadRequest)
+                .contentType(APPLICATION_JSON)
+                .body(requestList)
                 .post("/files/upload/{documentId}", DOCUMENT_ID)
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
@@ -574,7 +576,7 @@ class DocumentControllerTest extends AbstractTest {
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
-                .contentType(ContentType.JSON)
+                .contentType(APPLICATION_JSON)
                 .body(List.of(metadataRequest))
                 .patch("/{documentId}/files/metadata", DOCUMENT_ID)
                 .then()
@@ -617,7 +619,7 @@ class DocumentControllerTest extends AbstractTest {
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
-                .contentType(ContentType.JSON)
+                .contentType(APPLICATION_JSON)
                 .body(List.of(metadataRequest))
                 .patch("/{documentId}/files/metadata", DOCUMENT_ID)
                 .then()
@@ -644,7 +646,7 @@ class DocumentControllerTest extends AbstractTest {
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
-                .contentType(ContentType.JSON)
+                .contentType(APPLICATION_JSON)
                 .body(List.of(auditRequest))
                 .patch("/{documentId}/files/audit-log", DOCUMENT_ID)
                 .then()
@@ -669,7 +671,7 @@ class DocumentControllerTest extends AbstractTest {
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
-                .contentType(ContentType.JSON)
+                .contentType(APPLICATION_JSON)
                 .body(List.of(auditRequest))
                 .patch("/{documentId}/files/audit-log", DOCUMENT_ID)
                 .then()
@@ -702,7 +704,7 @@ class DocumentControllerTest extends AbstractTest {
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
-                .contentType(ContentType.JSON)
+                .contentType(APPLICATION_JSON)
                 .body(criteria)
                 .post("/search/show-all-documents")
                 .then()
@@ -749,7 +751,7 @@ class DocumentControllerTest extends AbstractTest {
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
-                .contentType(ContentType.JSON)
+                .contentType(APPLICATION_JSON)
                 .body(criteria)
                 .post("/search")
                 .then()
@@ -797,7 +799,7 @@ class DocumentControllerTest extends AbstractTest {
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
-                .contentType(ContentType.JSON)
+                .contentType(APPLICATION_JSON)
                 .body(updateRequest)
                 .put("/{id}", DOCUMENT_ID)
                 .then()
@@ -824,6 +826,8 @@ class DocumentControllerTest extends AbstractTest {
         updateRequest.setTypeId("type-1");
         updateRequest.setChannel(channelRequest);
 
+        List<DocumentCreateUpdateDTO> updateRequests = List.of(updateRequest);
+
         var updatedDocument = new DocumentDetail();
         updatedDocument.setId(DOCUMENT_ID);
         updatedDocument.setName("Bulk Updated Document");
@@ -844,8 +848,8 @@ class DocumentControllerTest extends AbstractTest {
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
-                .contentType(ContentType.JSON)
-                .body(updateRequest)
+                .contentType(APPLICATION_JSON)
+                .body(updateRequests)
                 .put("/bulkupdate")
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
@@ -887,14 +891,14 @@ class DocumentControllerTest extends AbstractTest {
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
-                .contentType(ContentType.JSON)
+                .contentType(APPLICATION_JSON)
                 .body(createRequest)
                 .post()
                 .then()
                 .statusCode(Response.Status.CREATED.getStatusCode())
                 .extract()
                 .body()
-                .as(DocumentDetail.class);
+                .as(DocumentDetailDTO.class);
 
         assertThat(response.getId()).isEqualTo(DOCUMENT_ID);
         assertThat(response.getName()).isEqualTo("Created Document");
@@ -924,7 +928,7 @@ class DocumentControllerTest extends AbstractTest {
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
-                .contentType(ContentType.JSON)
+                .contentType(APPLICATION_JSON)
                 .get("/files/upload/failed/{id}", DOCUMENT_ID)
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
@@ -959,7 +963,7 @@ class DocumentControllerTest extends AbstractTest {
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
-                .contentType(ContentType.JSON)
+                .contentType(APPLICATION_JSON)
                 .get("/channels")
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
@@ -994,7 +998,7 @@ class DocumentControllerTest extends AbstractTest {
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
-                .contentType(ContentType.JSON)
+                .contentType(APPLICATION_JSON)
                 .get("/{id}", DOCUMENT_ID)
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
@@ -1023,7 +1027,7 @@ class DocumentControllerTest extends AbstractTest {
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
-                .contentType(ContentType.JSON)
+                .contentType(APPLICATION_JSON)
                 .body(List.of(DOCUMENT_ID))
                 .delete("/delete-bulk-documents")
                 .then()

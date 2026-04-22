@@ -39,7 +39,8 @@ public class DocumentController implements DocumentControllerApiService {
     public Response bulkUpdateDocument(List<DocumentCreateUpdateDTO> documentCreateUpdateDTOS) {
         try (Response response = documentControllerApi.bulkUpdateDocument(mapper.map(documentCreateUpdateDTOS))) {
             return Response.status(response.getStatus())
-                    .entity(mapper.map(response.readEntity(DocumentDetailDTO.class)))
+                    .entity(mapper.mapBulkResponse(response.readEntity(new GenericType<List<DocumentDetail>>() {
+                    })))
                     .build();
         }
     }

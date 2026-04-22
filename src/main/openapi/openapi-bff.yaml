@@ -4,6 +4,8 @@ info:
   title: OneCX Document BFF
   description: OneCX Document Backend For Frontend API
   version: '1.0'
+servers:
+  - url: http://onecx-document-bff:8080/
 tags:
   - name: DocumentController
   - name: DocumentSpecificationController

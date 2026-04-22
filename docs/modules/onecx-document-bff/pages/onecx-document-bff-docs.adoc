@@ -18,7 +18,6 @@ onecx.permissions.application-id=${quarkus.application.name}
 %prod.quarkus.rest-client.onecx_document_svc.url = http://onecx-document-svc:8080
 %prod.quarkus.rest-client.onecx_file_storage_svc.url= http://onecx-file-storage-svc:8080
 org.eclipse.microprofile.rest.client.propagateHeaders=apm-principal-token
-quarkus.http.limits.max-body-size=20240K
 quarkus.openapi-generator.codegen.input-base-dir=target/tmp/openapi
 quarkus.openapi-generator.codegen.spec.onecx_document_svc_yaml.config-key=onecx_document_svc
 quarkus.openapi-generator.codegen.spec.onecx_document_svc_yaml.base-package=gen.org.tkit.onecx.document.client

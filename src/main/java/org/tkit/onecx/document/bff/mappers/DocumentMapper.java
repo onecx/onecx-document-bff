@@ -15,6 +15,20 @@ import gen.org.tkit.onecx.filestorage.client.model.PresignedUrlResponse;
 public interface DocumentMapper {
     DocumentCreateUpdate map(DocumentCreateUpdateDTO documentCreateUpdateDTO);
 
+    List<DocumentDetailDTO> mapBulkResponse(List<DocumentDetail> documentDetails);
+
+    @Mapping(target = "storage", ignore = true)
+    @Mapping(target = "externalStorageURL", ignore = true)
+    AttachmentDTO map(Attachment attachment);
+
+    @Mapping(target = "removeTagsItem", ignore = true)
+    @Mapping(target = "removeRelatedPartiesItem", ignore = true)
+    @Mapping(target = "removeDocumentRelationshipsItem", ignore = true)
+    @Mapping(target = "removeCharacteristicsItem", ignore = true)
+    @Mapping(target = "removeCategoriesItem", ignore = true)
+    @Mapping(target = "removeAttachmentsItem", ignore = true)
+    DocumentDetailDTO map(DocumentDetail documentDetail);
+
     List<DocumentCreateUpdate> map(List<DocumentCreateUpdateDTO> documentCreateUpdateDTO);
 
     @Mapping(target = "_file", ignore = true)
