@@ -16,6 +16,7 @@ quarkus.http.auth.permission.default.paths=/*
 quarkus.http.auth.permission.default.policy=authenticated
 onecx.permissions.application-id=${quarkus.application.name}
 %prod.quarkus.rest-client.onecx_document_svc.url = http://onecx-document-svc:8080
+%prod.quarkus.rest-client.onecx_file_storage_svc.url= http://onecx-file-storage-svc:8080
 org.eclipse.microprofile.rest.client.propagateHeaders=apm-principal-token
 quarkus.http.limits.max-body-size=20240K
 quarkus.openapi-generator.codegen.input-base-dir=target/tmp/openapi
@@ -37,7 +38,9 @@ onecx.document.file-storage.product-name=onecx-document
 onecx.document.file-storage.application-id=onecx-document-bff
 onecx.document.file-storage.file-name-separator=_
 %prod.quarkus.rest-client.onecx_document_svc.providers=io.quarkus.oidc.client.reactive.filter.OidcClientRequestReactiveFilter
+%prod.quarkus.rest-client.onecx_file_storage_svc.providers=io.quarkus.oidc.client.reactive.filter.OidcClientRequestReactiveFilter
 %prod.quarkus.oidc-client.client-id=${quarkus.application.name}
+quarkus.native.resources.includes=openapi-templates/**
 ----
 ====
 

@@ -6,6 +6,7 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.JsonBody.json;
 
+import java.util.Arrays;
 import java.util.List;
 
 import jakarta.ws.rs.core.Response;
@@ -14,11 +15,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockserver.client.MockServerClient;
+import org.mockserver.model.JsonBody;
 import org.tkit.onecx.document.bff.AbstractTest;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-
+import gen.org.tkit.onecx.document.client.model.DocumentSpecification;
 import gen.org.tkit.onecx.document.rs.internal.model.DocumentSpecificationCreateUpdateDTO;
 import gen.org.tkit.onecx.document.rs.internal.model.DocumentSpecificationDTO;
 import io.quarkiverse.mockserver.test.InjectMockServerClient;
@@ -31,13 +31,9 @@ import io.restassured.http.ContentType;
 class DocumentSpecificationControllerTest extends AbstractTest {
 
     private static final String SPEC_ID = "test-spec-id";
-    private static final String USERNAME_TOKEN = "apm-username";
     private static final String SVC_MOCK_ID = "DOC_MGMT_SVC_MOCK";
     private static final String SEC_SVC_MOCK_ID = "SEC_DOC_MGMT_SVC_MOCK";
     private static final String FILE_STORAGE_MOCK_ID = "FILE_STORAGE_SVC_MOCK";
-
-    private static final ObjectMapper MAPPER = new ObjectMapper()
-            .registerModule(new JavaTimeModule());
 
     @InjectMockServerClient
     MockServerClient mockServerClient;
@@ -56,10 +52,11 @@ class DocumentSpecificationControllerTest extends AbstractTest {
     @Test
     @DisplayName("GET / - should return all document specifications")
     void getAllDocumentSpecifications_shouldReturnSpecifications_whenServiceRespondsOk() throws Exception {
-        var specification = new DocumentSpecificationDTO();
+        var specification = new DocumentSpecification();
         specification.setId(SPEC_ID);
         specification.setName("Contract Spec");
         specification.setSpecificationVersion("1.0");
+        List<DocumentSpecification> specifications = List.of(specification);
 
         mockServerClient
                 .when(request()
@@ -69,23 +66,21 @@ class DocumentSpecificationControllerTest extends AbstractTest {
                 .respond(response()
                         .withStatusCode(Response.Status.OK.getStatusCode())
                         .withContentType(org.mockserver.model.MediaType.APPLICATION_JSON)
-                        .withBody(json(MAPPER.writeValueAsString(List.of(specification)))));
+                        .withBody(JsonBody.json(specifications)));
 
         var response = given()
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
-                .header(USERNAME_TOKEN, ADMIN)
-                .header(APM_HEADER_PARAM, createToken(ADMIN, "org1"))
+                .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(ContentType.JSON)
                 .get()
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .extract()
-                .body()
-                .jsonPath();
+                .body().as(DocumentSpecificationDTO[].class);
 
-        assertThat(response.getString("[0].id")).isEqualTo(SPEC_ID);
-        assertThat(response.getString("[0].name")).isEqualTo("Contract Spec");
+        assertThat(Arrays.stream(response).toList().get(0).getId()).isEqualTo(SPEC_ID);
+        assertThat(Arrays.stream(response).toList().get(0).getName()).isEqualTo("Contract Spec");
     }
 
     @Test
@@ -95,7 +90,7 @@ class DocumentSpecificationControllerTest extends AbstractTest {
         requestDto.setName("Contract Spec");
         requestDto.setSpecificationVersion("1.0");
 
-        var specification = new DocumentSpecificationDTO();
+        var specification = new DocumentSpecification();
         specification.setId(SPEC_ID);
         specification.setName("Contract Spec");
         specification.setSpecificationVersion("1.0");
@@ -108,29 +103,27 @@ class DocumentSpecificationControllerTest extends AbstractTest {
                 .respond(response()
                         .withStatusCode(Response.Status.CREATED.getStatusCode())
                         .withContentType(org.mockserver.model.MediaType.APPLICATION_JSON)
-                        .withBody(json(MAPPER.writeValueAsString(specification))));
+                        .withBody(JsonBody.json(specification)));
 
         var response = given()
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
-                .header(USERNAME_TOKEN, ADMIN)
-                .header(APM_HEADER_PARAM, createToken(ADMIN, "org1"))
+                .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(ContentType.JSON)
-                .body(MAPPER.writeValueAsString(requestDto))
+                .body(requestDto)
                 .post()
                 .then()
                 .statusCode(Response.Status.CREATED.getStatusCode())
                 .extract()
-                .body()
-                .jsonPath();
+                .body().as(DocumentSpecificationDTO.class);
 
-        assertThat(response.getString("id")).isEqualTo(SPEC_ID);
+        assertThat(response.getId()).isEqualTo(SPEC_ID);
     }
 
     @Test
     @DisplayName("GET /{id} - should return document specification by id")
     void getDocumentSpecificationById_shouldReturnSpecification_whenServiceRespondsOk() throws Exception {
-        var specification = new DocumentSpecificationDTO();
+        var specification = new DocumentSpecification();
         specification.setId(SPEC_ID);
         specification.setName("Contract Spec");
         specification.setSpecificationVersion("1.0");
@@ -143,22 +136,20 @@ class DocumentSpecificationControllerTest extends AbstractTest {
                 .respond(response()
                         .withStatusCode(Response.Status.OK.getStatusCode())
                         .withContentType(org.mockserver.model.MediaType.APPLICATION_JSON)
-                        .withBody(json(MAPPER.writeValueAsString(specification))));
+                        .withBody(JsonBody.json(specification)));
 
         var response = given()
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
-                .header(USERNAME_TOKEN, ADMIN)
-                .header(APM_HEADER_PARAM, createToken(ADMIN, "org1"))
+                .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(ContentType.JSON)
                 .get("/{id}", SPEC_ID)
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .extract()
-                .body()
-                .jsonPath();
+                .body().as(DocumentSpecificationDTO.class);
 
-        assertThat(response.getString("id")).isEqualTo(SPEC_ID);
+        assertThat(response.getId()).isEqualTo(SPEC_ID);
     }
 
     @Test
@@ -168,7 +159,7 @@ class DocumentSpecificationControllerTest extends AbstractTest {
         requestDto.setName("Contract Spec");
         requestDto.setSpecificationVersion("2.0");
 
-        var specification = new DocumentSpecificationDTO();
+        var specification = new DocumentSpecification();
         specification.setId(SPEC_ID);
         specification.setName("Contract Spec");
         specification.setSpecificationVersion("2.0");
@@ -181,23 +172,20 @@ class DocumentSpecificationControllerTest extends AbstractTest {
                 .respond(response()
                         .withStatusCode(Response.Status.OK.getStatusCode())
                         .withContentType(org.mockserver.model.MediaType.APPLICATION_JSON)
-                        .withBody(json(MAPPER.writeValueAsString(specification))));
+                        .withBody(JsonBody.json(specification)));
 
         var response = given()
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
-                .header(USERNAME_TOKEN, ADMIN)
-                .header(APM_HEADER_PARAM, createToken(ADMIN, "org1"))
+                .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(ContentType.JSON)
-                .body(MAPPER.writeValueAsString(requestDto))
+                .body(requestDto)
                 .put("/{id}", SPEC_ID)
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .extract()
-                .body()
-                .jsonPath();
-
-        assertThat(response.getString("specificationVersion")).isEqualTo("2.0");
+                .body().as(DocumentSpecificationDTO.class);
+        assertThat(response.getSpecificationVersion()).isEqualTo("2.0");
     }
 
     @Test
@@ -214,8 +202,7 @@ class DocumentSpecificationControllerTest extends AbstractTest {
         given()
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
-                .header(USERNAME_TOKEN, ADMIN)
-                .header(APM_HEADER_PARAM, createToken(ADMIN, "org1"))
+                .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(ContentType.JSON)
                 .delete("/{id}", SPEC_ID)
                 .then()

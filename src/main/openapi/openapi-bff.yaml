@@ -1,8 +1,8 @@
 ---
 openapi: 3.0.3
 info:
-  title: document-management
-  description: 1000kit document management
+  title: OneCX Document BFF
+  description: OneCX Document Backend For Frontend API
   version: '1.0'
 tags:
   - name: DocumentController

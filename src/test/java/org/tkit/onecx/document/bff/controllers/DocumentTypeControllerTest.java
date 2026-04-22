@@ -14,11 +14,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockserver.client.MockServerClient;
+import org.mockserver.model.JsonBody;
 import org.tkit.onecx.document.bff.AbstractTest;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-
+import gen.org.tkit.onecx.document.client.model.DocumentType;
 import gen.org.tkit.onecx.document.rs.internal.model.DocumentTypeCreateUpdateDTO;
 import gen.org.tkit.onecx.document.rs.internal.model.DocumentTypeDTO;
 import io.quarkiverse.mockserver.test.InjectMockServerClient;
@@ -35,9 +34,6 @@ class DocumentTypeControllerTest extends AbstractTest {
     private static final String SVC_MOCK_ID = "DOC_MGMT_SVC_MOCK";
     private static final String SEC_SVC_MOCK_ID = "SEC_DOC_MGMT_SVC_MOCK";
     private static final String FILE_STORAGE_MOCK_ID = "FILE_STORAGE_SVC_MOCK";
-
-    private static final ObjectMapper MAPPER = new ObjectMapper()
-            .registerModule(new JavaTimeModule());
 
     @InjectMockServerClient
     MockServerClient mockServerClient;
@@ -56,7 +52,7 @@ class DocumentTypeControllerTest extends AbstractTest {
     @Test
     @DisplayName("GET / - should return all document types")
     void getAllTypesOfDocument_shouldReturnDocumentTypes_whenServiceRespondsOk() throws Exception {
-        var type = new DocumentTypeDTO();
+        var type = new DocumentType();
         type.setId(TYPE_ID);
         type.setName("Invoice");
 
@@ -68,23 +64,21 @@ class DocumentTypeControllerTest extends AbstractTest {
                 .respond(response()
                         .withStatusCode(Response.Status.OK.getStatusCode())
                         .withContentType(org.mockserver.model.MediaType.APPLICATION_JSON)
-                        .withBody(json(MAPPER.writeValueAsString(List.of(type)))));
+                        .withBody(JsonBody.json(List.of(type))));
 
         var response = given()
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
-                .header(USERNAME_TOKEN, ADMIN)
-                .header(APM_HEADER_PARAM, createToken(ADMIN, "org1"))
+                .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(ContentType.JSON)
                 .get()
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .extract()
-                .body()
-                .jsonPath();
+                .body().as(DocumentTypeDTO[].class);
 
-        assertThat(response.getString("[0].id")).isEqualTo(TYPE_ID);
-        assertThat(response.getString("[0].name")).isEqualTo("Invoice");
+        assertThat(response[0].getId()).isEqualTo(TYPE_ID);
+        assertThat(response[0].getName()).isEqualTo("Invoice");
     }
 
     @Test
@@ -93,7 +87,7 @@ class DocumentTypeControllerTest extends AbstractTest {
         var requestDto = new DocumentTypeCreateUpdateDTO();
         requestDto.setName("Invoice");
 
-        var type = new DocumentTypeDTO();
+        var type = new DocumentType();
         type.setId(TYPE_ID);
         type.setName("Invoice");
 
@@ -105,29 +99,27 @@ class DocumentTypeControllerTest extends AbstractTest {
                 .respond(response()
                         .withStatusCode(Response.Status.CREATED.getStatusCode())
                         .withContentType(org.mockserver.model.MediaType.APPLICATION_JSON)
-                        .withBody(json(MAPPER.writeValueAsString(type))));
+                        .withBody(JsonBody.json(type)));
 
         var response = given()
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
-                .header(USERNAME_TOKEN, ADMIN)
-                .header(APM_HEADER_PARAM, createToken(ADMIN, "org1"))
+                .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(ContentType.JSON)
-                .body(MAPPER.writeValueAsString(requestDto))
+                .body(requestDto)
                 .post()
                 .then()
                 .statusCode(Response.Status.CREATED.getStatusCode())
                 .extract()
-                .body()
-                .jsonPath();
+                .body().as(DocumentTypeDTO.class);
 
-        assertThat(response.getString("id")).isEqualTo(TYPE_ID);
+        assertThat(response.getId()).isEqualTo(TYPE_ID);
     }
 
     @Test
     @DisplayName("GET /{id} - should return document type by id")
     void getDocumentTypeById_shouldReturnDocumentType_whenServiceRespondsOk() throws Exception {
-        var type = new DocumentTypeDTO();
+        var type = new DocumentType();
         type.setId(TYPE_ID);
         type.setName("Invoice");
 
@@ -139,22 +131,20 @@ class DocumentTypeControllerTest extends AbstractTest {
                 .respond(response()
                         .withStatusCode(Response.Status.OK.getStatusCode())
                         .withContentType(org.mockserver.model.MediaType.APPLICATION_JSON)
-                        .withBody(json(MAPPER.writeValueAsString(type))));
+                        .withBody(JsonBody.json(type)));
 
         var response = given()
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
-                .header(USERNAME_TOKEN, ADMIN)
-                .header(APM_HEADER_PARAM, createToken(ADMIN, "org1"))
+                .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(ContentType.JSON)
                 .get("/{id}", TYPE_ID)
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .extract()
-                .body()
-                .jsonPath();
+                .body().as(DocumentTypeDTO.class);
 
-        assertThat(response.getString("id")).isEqualTo(TYPE_ID);
+        assertThat(response.getId()).isEqualTo(TYPE_ID);
     }
 
     @Test
@@ -163,7 +153,7 @@ class DocumentTypeControllerTest extends AbstractTest {
         var requestDto = new DocumentTypeCreateUpdateDTO();
         requestDto.setName("Invoice V2");
 
-        var type = new DocumentTypeDTO();
+        var type = new DocumentType();
         type.setId(TYPE_ID);
         type.setName("Invoice V2");
 
@@ -175,23 +165,21 @@ class DocumentTypeControllerTest extends AbstractTest {
                 .respond(response()
                         .withStatusCode(Response.Status.CREATED.getStatusCode())
                         .withContentType(org.mockserver.model.MediaType.APPLICATION_JSON)
-                        .withBody(json(MAPPER.writeValueAsString(type))));
+                        .withBody(JsonBody.json(type)));
 
         var response = given()
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
-                .header(USERNAME_TOKEN, ADMIN)
-                .header(APM_HEADER_PARAM, createToken(ADMIN, "org1"))
+                .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(ContentType.JSON)
-                .body(MAPPER.writeValueAsString(requestDto))
+                .body(requestDto)
                 .put("/{id}", TYPE_ID)
                 .then()
                 .statusCode(Response.Status.CREATED.getStatusCode())
                 .extract()
-                .body()
-                .jsonPath();
+                .body().as(DocumentTypeDTO.class);
 
-        assertThat(response.getString("name")).isEqualTo("Invoice V2");
+        assertThat(response.getName()).isEqualTo("Invoice V2");
     }
 
     @Test
@@ -208,8 +196,7 @@ class DocumentTypeControllerTest extends AbstractTest {
         given()
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
-                .header(USERNAME_TOKEN, ADMIN)
-                .header(APM_HEADER_PARAM, createToken(ADMIN, "org1"))
+                .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(ContentType.JSON)
                 .delete("/{id}", TYPE_ID)
                 .then()

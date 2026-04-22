@@ -3,7 +3,7 @@
     "id" : "1",
     "httpRequest" : {
       "headers" : {
-        "apm-username": [
+        "apm-principal-token": [
           "alice"
         ]
       },
@@ -19,6 +19,10 @@
               "read",
               "write",
               "delete"
+            ],
+            "permissions": [
+              "admin-write",
+              "admin-read"
             ]
           }
         },

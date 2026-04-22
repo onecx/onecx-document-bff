@@ -4,7 +4,6 @@ import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
-import static org.mockserver.model.JsonBody.json;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -16,13 +15,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.model.JsonBody;
+import org.mockserver.model.MediaType;
 import org.tkit.onecx.document.bff.AbstractTest;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import gen.org.tkit.onecx.document.client.model.Attachment;
 import gen.org.tkit.onecx.document.client.model.DocumentDetail;
+import gen.org.tkit.onecx.document.rs.internal.model.AttachmentPresignedUrlResponseDTO;
 import gen.org.tkit.onecx.document.rs.internal.model.ChannelCreateUpdateDTO;
 import gen.org.tkit.onecx.document.rs.internal.model.ChannelDTO;
 import gen.org.tkit.onecx.document.rs.internal.model.DocumentCreateUpdateDTO;
@@ -32,6 +30,7 @@ import gen.org.tkit.onecx.document.rs.internal.model.DocumentSearchCriteriaDTO;
 import gen.org.tkit.onecx.document.rs.internal.model.StorageUploadAuditDTO;
 import gen.org.tkit.onecx.document.rs.internal.model.UpdateFileMetadataRequestDTO;
 import gen.org.tkit.onecx.document.rs.internal.model.UploadAttachmentPresignedUrlRequestDTO;
+import gen.org.tkit.onecx.document.rs.internal.model.UploadAttachmentPresignedUrlResponseDTO;
 import gen.org.tkit.onecx.filestorage.client.model.FileDeleteRequest;
 import gen.org.tkit.onecx.filestorage.client.model.FileMetadataResponse;
 import gen.org.tkit.onecx.filestorage.client.model.PresignedUrlResponse;
@@ -49,13 +48,9 @@ class DocumentControllerTest extends AbstractTest {
     private static final String FILE_NAME = "test-file.pdf";
     private static final String PRESIGNED_URL = "https://mock-storage.example.com/download/test-file.pdf";
     private static final OffsetDateTime EXPIRATION = OffsetDateTime.parse("2026-12-31T23:59:59+01:00");
-    private static final String USERNAME_TOKEN = "apm-username";
     private static final String SVC_MOCK_ID = "DOC_MGMT_SVC_MOCK";
     private static final String SEC_SVC_MOCK_ID = "SEC_DOC_MGMT_SVC_MOCK";
     private static final String FILE_STORAGE_MOCK_ID = "FILE_STORAGE_SVC_MOCK";
-
-    private static final ObjectMapper MAPPER = new ObjectMapper()
-            .registerModule(new JavaTimeModule());
 
     @InjectMockServerClient
     MockServerClient mockServerClient;
@@ -73,7 +68,7 @@ class DocumentControllerTest extends AbstractTest {
 
     @Test
     @DisplayName("GET /file/{attachmentId} - should return presigned download URL when attachment and file storage respond successfully")
-    void getFile_shouldReturnPresignedUrl_whenAttachmentAndStorageRespondOk() throws Exception {
+    void getFile_shouldReturnPresignedUrl_whenAttachmentAndStorageRespondOk() {
         var attachment = new Attachment();
         attachment.setId(ATTACHMENT_ID);
         attachment.setFileName(FILE_NAME);
@@ -91,7 +86,7 @@ class DocumentControllerTest extends AbstractTest {
                 .respond(response()
                         .withStatusCode(Response.Status.OK.getStatusCode())
                         .withContentType(org.mockserver.model.MediaType.APPLICATION_JSON)
-                        .withBody(json(MAPPER.writeValueAsString(attachment))));
+                        .withBody(JsonBody.json(attachment)));
 
         mockServerClient
                 .when(request()
@@ -101,23 +96,22 @@ class DocumentControllerTest extends AbstractTest {
                 .respond(response()
                         .withStatusCode(Response.Status.OK.getStatusCode())
                         .withContentType(org.mockserver.model.MediaType.APPLICATION_JSON)
-                        .withBody(json(MAPPER.writeValueAsString(presignedUrlResponse))));
+                        .withBody(JsonBody.json(presignedUrlResponse)));
 
         var responseBody = given()
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
-                .header(USERNAME_TOKEN, ADMIN)
-                .header(APM_HEADER_PARAM, createToken(ADMIN, "org1"))
+                .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(ContentType.JSON)
                 .get("/file/{attachmentId}", ATTACHMENT_ID)
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .extract()
                 .body()
-                .jsonPath();
+                .as(AttachmentPresignedUrlResponseDTO.class);
 
-        assertThat(responseBody.getString("url")).isEqualTo(PRESIGNED_URL);
-        assertThat(responseBody.getString("expiration")).isNotBlank();
+        assertThat(responseBody.getUrl()).isEqualTo(PRESIGNED_URL);
+        assertThat(responseBody.getExpiration()).isNotNull();
     }
 
     @Test
@@ -134,8 +128,7 @@ class DocumentControllerTest extends AbstractTest {
         given()
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
-                .header(USERNAME_TOKEN, ADMIN)
-                .header(APM_HEADER_PARAM, createToken(ADMIN, "org1"))
+                .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(ContentType.JSON)
                 .get("/file/{attachmentId}", ATTACHMENT_ID)
                 .then()
@@ -156,8 +149,7 @@ class DocumentControllerTest extends AbstractTest {
         given()
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
-                .header(USERNAME_TOKEN, ADMIN)
-                .header(APM_HEADER_PARAM, createToken(ADMIN, "org1"))
+                .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(ContentType.JSON)
                 .get("/file/{attachmentId}", ATTACHMENT_ID)
                 .then()
@@ -166,7 +158,7 @@ class DocumentControllerTest extends AbstractTest {
 
     @Test
     @DisplayName("GET /file/{attachmentId} - should return 400 when file storage fails to provide presigned download URL")
-    void getFile_shouldReturnBadRequest_whenPresignedDownloadUrlFails() throws Exception {
+    void getFile_shouldReturnBadRequest_whenPresignedDownloadUrlFails() {
         var attachment = new Attachment();
         attachment.setId(ATTACHMENT_ID);
         attachment.setFileName(FILE_NAME);
@@ -179,7 +171,7 @@ class DocumentControllerTest extends AbstractTest {
                 .respond(response()
                         .withStatusCode(Response.Status.OK.getStatusCode())
                         .withContentType(org.mockserver.model.MediaType.APPLICATION_JSON)
-                        .withBody(json(MAPPER.writeValueAsString(attachment))));
+                        .withBody(JsonBody.json(attachment)));
 
         mockServerClient
                 .when(request()
@@ -192,8 +184,7 @@ class DocumentControllerTest extends AbstractTest {
         given()
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
-                .header(USERNAME_TOKEN, ADMIN)
-                .header(APM_HEADER_PARAM, createToken(ADMIN, "org1"))
+                .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(ContentType.JSON)
                 .get("/file/{attachmentId}", ATTACHMENT_ID)
                 .then()
@@ -204,7 +195,7 @@ class DocumentControllerTest extends AbstractTest {
 
     @Test
     @DisplayName("DELETE /{id} - should return 204 when document with attachments is successfully deleted and files are removed from storage")
-    void deleteDocumentById_shouldReturnNoContent_whenDocumentAndFilesDeletedSuccessfully() throws Exception {
+    void deleteDocumentById_shouldReturnNoContent_whenDocumentAndFilesDeletedSuccessfully() {
         var attachment = new Attachment();
         attachment.setId(ATTACHMENT_ID);
         attachment.setFileName(FILE_NAME);
@@ -224,7 +215,7 @@ class DocumentControllerTest extends AbstractTest {
                 .respond(response()
                         .withStatusCode(Response.Status.OK.getStatusCode())
                         .withContentType(org.mockserver.model.MediaType.APPLICATION_JSON)
-                        .withBody(json(MAPPER.writeValueAsString(documentDetail))));
+                        .withBody(JsonBody.json(documentDetail)));
 
         mockServerClient
                 .when(request()
@@ -246,8 +237,7 @@ class DocumentControllerTest extends AbstractTest {
         given()
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
-                .header(USERNAME_TOKEN, ADMIN)
-                .header(APM_HEADER_PARAM, createToken(ADMIN, "org1"))
+                .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(ContentType.JSON)
                 .delete("/{id}", DOCUMENT_ID)
                 .then()
@@ -256,7 +246,7 @@ class DocumentControllerTest extends AbstractTest {
 
     @Test
     @DisplayName("DELETE /{id} - should return 204 when document has no attachments")
-    void deleteDocumentById_shouldReturnNoContent_whenDocumentHasNoAttachments() throws Exception {
+    void deleteDocumentById_shouldReturnNoContent_whenDocumentHasNoAttachments() {
         var documentDetail = new DocumentDetail();
         documentDetail.setId(DOCUMENT_ID);
         documentDetail.setAttachments(List.of());
@@ -269,7 +259,7 @@ class DocumentControllerTest extends AbstractTest {
                 .respond(response()
                         .withStatusCode(Response.Status.OK.getStatusCode())
                         .withContentType(org.mockserver.model.MediaType.APPLICATION_JSON)
-                        .withBody(json(MAPPER.writeValueAsString(documentDetail))));
+                        .withBody(JsonBody.json(documentDetail)));
 
         mockServerClient
                 .when(request()
@@ -282,8 +272,7 @@ class DocumentControllerTest extends AbstractTest {
         given()
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
-                .header(USERNAME_TOKEN, ADMIN)
-                .header(APM_HEADER_PARAM, createToken(ADMIN, "org1"))
+                .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(ContentType.JSON)
                 .delete("/{id}", DOCUMENT_ID)
                 .then()
@@ -292,7 +281,7 @@ class DocumentControllerTest extends AbstractTest {
 
     @Test
     @DisplayName("DELETE /{id} - should return 400 when file storage fails to delete attachment file")
-    void deleteDocumentById_shouldReturnBadRequest_whenFileStorageDeleteFails() throws Exception {
+    void deleteDocumentById_shouldReturnBadRequest_whenFileStorageDeleteFails() {
         var attachment = new Attachment();
         attachment.setId(ATTACHMENT_ID);
         attachment.setFileName(FILE_NAME);
@@ -313,7 +302,7 @@ class DocumentControllerTest extends AbstractTest {
                 .respond(response()
                         .withStatusCode(Response.Status.OK.getStatusCode())
                         .withContentType(org.mockserver.model.MediaType.APPLICATION_JSON)
-                        .withBody(json(MAPPER.writeValueAsString(documentDetail))));
+                        .withBody(JsonBody.json(documentDetail)));
 
         mockServerClient
                 .when(request()
@@ -335,8 +324,7 @@ class DocumentControllerTest extends AbstractTest {
         given()
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
-                .header(USERNAME_TOKEN, ADMIN)
-                .header(APM_HEADER_PARAM, createToken(ADMIN, "org1"))
+                .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(ContentType.JSON)
                 .delete("/{id}", DOCUMENT_ID)
                 .then()
@@ -347,7 +335,7 @@ class DocumentControllerTest extends AbstractTest {
 
     @Test
     @DisplayName("POST /files/upload/{documentId} - should return presigned upload URLs for all matched attachments")
-    void uploadAllFiles_shouldReturnPresignedUploadUrls_whenAllSucceed() throws Exception {
+    void uploadAllFiles_shouldReturnPresignedUploadUrls_whenAllSucceed() {
         var attachment = new Attachment();
         attachment.setId(ATTACHMENT_ID);
         attachment.setFileName(FILE_NAME);
@@ -368,7 +356,7 @@ class DocumentControllerTest extends AbstractTest {
                 .respond(response()
                         .withStatusCode(Response.Status.OK.getStatusCode())
                         .withContentType(org.mockserver.model.MediaType.APPLICATION_JSON)
-                        .withBody(json(MAPPER.writeValueAsString(documentDetail))));
+                        .withBody(JsonBody.json(documentDetail)));
 
         mockServerClient
                 .when(request()
@@ -378,7 +366,7 @@ class DocumentControllerTest extends AbstractTest {
                 .respond(response()
                         .withStatusCode(Response.Status.OK.getStatusCode())
                         .withContentType(org.mockserver.model.MediaType.APPLICATION_JSON)
-                        .withBody(json(MAPPER.writeValueAsString(presignedUploadResponse))));
+                        .withBody(JsonBody.json(presignedUploadResponse)));
 
         var uploadRequest = new UploadAttachmentPresignedUrlRequestDTO();
         uploadRequest.setAttachmentId(ATTACHMENT_ID);
@@ -387,24 +375,23 @@ class DocumentControllerTest extends AbstractTest {
         var response = given()
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
-                .header(USERNAME_TOKEN, ADMIN)
-                .header(APM_HEADER_PARAM, createToken(ADMIN, "org1"))
+                .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(ContentType.JSON)
-                .body(MAPPER.writeValueAsString(List.of(uploadRequest)))
+                .body(List.of(uploadRequest))
                 .post("/files/upload/{documentId}", DOCUMENT_ID)
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .extract()
                 .body()
-                .jsonPath();
+                .as(UploadAttachmentPresignedUrlResponseDTO[].class);
 
-        assertThat(response.getString("[0].url")).isEqualTo(PRESIGNED_URL);
-        assertThat(response.getString("[0].attachmentId")).isEqualTo(ATTACHMENT_ID);
+        assertThat(response[0].getUrl()).isEqualTo(PRESIGNED_URL);
+        assertThat(response[0].getAttachmentId()).isEqualTo(ATTACHMENT_ID);
     }
 
     @Test
     @DisplayName("POST /files/upload/{documentId} - should return failed result when attachment file name does not match the request")
-    void uploadAllFiles_shouldReturnFailedResult_whenFileNameDoesNotMatch() throws Exception {
+    void uploadAllFiles_shouldReturnFailedResult_whenFileNameDoesNotMatch() {
         var attachment = new Attachment();
         attachment.setId(ATTACHMENT_ID);
         attachment.setFileName("different-file-name.pdf");
@@ -421,7 +408,7 @@ class DocumentControllerTest extends AbstractTest {
                 .respond(response()
                         .withStatusCode(Response.Status.OK.getStatusCode())
                         .withContentType(org.mockserver.model.MediaType.APPLICATION_JSON)
-                        .withBody(json(MAPPER.writeValueAsString(documentDetail))));
+                        .withBody(JsonBody.json(documentDetail)));
 
         var uploadRequest = new UploadAttachmentPresignedUrlRequestDTO();
         uploadRequest.setAttachmentId(ATTACHMENT_ID);
@@ -430,24 +417,23 @@ class DocumentControllerTest extends AbstractTest {
         var response = given()
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
-                .header(USERNAME_TOKEN, ADMIN)
-                .header(APM_HEADER_PARAM, createToken(ADMIN, "org1"))
+                .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(ContentType.JSON)
-                .body(MAPPER.writeValueAsString(List.of(uploadRequest)))
+                .body(List.of(uploadRequest))
                 .post("/files/upload/{documentId}", DOCUMENT_ID)
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .extract()
                 .body()
-                .jsonPath();
+                .as(UploadAttachmentPresignedUrlResponseDTO[].class);
 
-        assertThat(response.getString("[0].url")).isNull();
-        assertThat(response.getString("[0].attachmentId")).isEqualTo(ATTACHMENT_ID);
+        assertThat(response[0].getUrl()).isNull();
+        assertThat(response[0].getAttachmentId()).isEqualTo(ATTACHMENT_ID);
     }
 
     @Test
     @DisplayName("POST /files/upload/{documentId} - should return empty list when no document attachment matches the request")
-    void uploadAllFiles_shouldReturnBadRequestStatus_whenAttachmentNotMatchingDocument() throws Exception {
+    void uploadAllFiles_shouldReturnBadRequestStatus_whenAttachmentNotMatchingDocument() {
         var attachment = new Attachment();
         attachment.setId("other-attachment-id");
         attachment.setFileName(FILE_NAME);
@@ -464,7 +450,7 @@ class DocumentControllerTest extends AbstractTest {
                 .respond(response()
                         .withStatusCode(Response.Status.OK.getStatusCode())
                         .withContentType(org.mockserver.model.MediaType.APPLICATION_JSON)
-                        .withBody(json(MAPPER.writeValueAsString(documentDetail))));
+                        .withBody(JsonBody.json(documentDetail)));
 
         var uploadRequest = new UploadAttachmentPresignedUrlRequestDTO();
         uploadRequest.setAttachmentId(ATTACHMENT_ID);
@@ -473,21 +459,22 @@ class DocumentControllerTest extends AbstractTest {
         var response = given()
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
-                .header(USERNAME_TOKEN, ADMIN)
-                .header(APM_HEADER_PARAM, createToken(ADMIN, "org1"))
+                .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(ContentType.JSON)
-                .body(MAPPER.writeValueAsString(List.of(uploadRequest)))
+                .body(List.of(uploadRequest))
                 .post("/files/upload/{documentId}", DOCUMENT_ID)
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .extract()
                 .body()
-                .jsonPath();
+                .as(UploadAttachmentPresignedUrlResponseDTO[].class);
+
+        assertThat(response).isEmpty();
     }
 
     @Test
     @DisplayName("POST /files/upload/{documentId} - should return failed result when file storage fails to provide presigned upload URL")
-    void uploadAllFiles_shouldReturnFailedResult_whenPresignedUploadUrlFails() throws Exception {
+    void uploadAllFiles_shouldReturnFailedResult_whenPresignedUploadUrlFails() {
         var attachment = new Attachment();
         attachment.setId(ATTACHMENT_ID);
         attachment.setFileName(FILE_NAME);
@@ -504,7 +491,7 @@ class DocumentControllerTest extends AbstractTest {
                 .respond(response()
                         .withStatusCode(Response.Status.OK.getStatusCode())
                         .withContentType(org.mockserver.model.MediaType.APPLICATION_JSON)
-                        .withBody(json(MAPPER.writeValueAsString(documentDetail))));
+                        .withBody(JsonBody.json(documentDetail)));
 
         mockServerClient
                 .when(request()
@@ -521,25 +508,24 @@ class DocumentControllerTest extends AbstractTest {
         var response = given()
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
-                .header(USERNAME_TOKEN, ADMIN)
-                .header(APM_HEADER_PARAM, createToken(ADMIN, "org1"))
+                .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(ContentType.JSON)
-                .body(MAPPER.writeValueAsString(List.of(uploadRequest)))
+                .body(uploadRequest)
                 .post("/files/upload/{documentId}", DOCUMENT_ID)
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .extract()
                 .body()
-                .jsonPath();
+                .as(UploadAttachmentPresignedUrlResponseDTO[].class);
 
-        assertThat(response.getString("[0].url")).isNull();
+        assertThat(response[0].getUrl()).isNull();
     }
 
     // ==================== updateAttachmentsMetadata ====================
 
     @Test
     @DisplayName("PATCH /{documentId}/files/metadata - should return 200 when metadata is successfully updated in file storage and attachment service")
-    void updateAttachmentsMetadata_shouldReturn200_whenAllSucceed() throws Exception {
+    void updateAttachmentsMetadata_shouldReturn200_whenAllSucceed() {
         var attachment = new Attachment();
         attachment.setId(ATTACHMENT_ID);
         attachment.setFileName(FILE_NAME);
@@ -561,7 +547,7 @@ class DocumentControllerTest extends AbstractTest {
                 .respond(response()
                         .withStatusCode(Response.Status.OK.getStatusCode())
                         .withContentType(org.mockserver.model.MediaType.APPLICATION_JSON)
-                        .withBody(json(MAPPER.writeValueAsString(documentDetail))));
+                        .withBody(JsonBody.json(documentDetail)));
 
         mockServerClient
                 .when(request()
@@ -571,7 +557,7 @@ class DocumentControllerTest extends AbstractTest {
                 .respond(response()
                         .withStatusCode(Response.Status.OK.getStatusCode())
                         .withContentType(org.mockserver.model.MediaType.APPLICATION_JSON)
-                        .withBody(json(MAPPER.writeValueAsString(List.of(metadataResponse)))));
+                        .withBody(JsonBody.json(List.of(metadataResponse))));
 
         mockServerClient
                 .when(request()
@@ -587,10 +573,9 @@ class DocumentControllerTest extends AbstractTest {
         given()
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
-                .header(USERNAME_TOKEN, ADMIN)
-                .header(APM_HEADER_PARAM, createToken(ADMIN, "org1"))
+                .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(ContentType.JSON)
-                .body(MAPPER.writeValueAsString(List.of(metadataRequest)))
+                .body(List.of(metadataRequest))
                 .patch("/{documentId}/files/metadata", DOCUMENT_ID)
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode());
@@ -598,7 +583,7 @@ class DocumentControllerTest extends AbstractTest {
 
     @Test
     @DisplayName("PATCH /{documentId}/files/metadata - should return 400 when file storage fails to return metadata")
-    void updateAttachmentsMetadata_shouldReturnBadRequest_whenFileStorageMetadataFails() throws Exception {
+    void updateAttachmentsMetadata_shouldReturnBadRequest_whenFileStorageMetadataFails() {
         var attachment = new Attachment();
         attachment.setId(ATTACHMENT_ID);
         attachment.setFileName(FILE_NAME);
@@ -615,7 +600,7 @@ class DocumentControllerTest extends AbstractTest {
                 .respond(response()
                         .withStatusCode(Response.Status.OK.getStatusCode())
                         .withContentType(org.mockserver.model.MediaType.APPLICATION_JSON)
-                        .withBody(json(MAPPER.writeValueAsString(documentDetail))));
+                        .withBody(JsonBody.json(documentDetail)));
 
         mockServerClient
                 .when(request()
@@ -631,10 +616,9 @@ class DocumentControllerTest extends AbstractTest {
         given()
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
-                .header(USERNAME_TOKEN, ADMIN)
-                .header(APM_HEADER_PARAM, createToken(ADMIN, "org1"))
+                .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(ContentType.JSON)
-                .body(MAPPER.writeValueAsString(List.of(metadataRequest)))
+                .body(List.of(metadataRequest))
                 .patch("/{documentId}/files/metadata", DOCUMENT_ID)
                 .then()
                 .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
@@ -644,7 +628,7 @@ class DocumentControllerTest extends AbstractTest {
 
     @Test
     @DisplayName("PATCH /{documentId}/files/audit-log - should return 200 when audit logs are successfully created")
-    void createFailedAttachmentsAuditLogs_shouldReturn200_whenAuditSucceeds() throws Exception {
+    void createFailedAttachmentsAuditLogs_shouldReturn200_whenAuditSucceeds() {
         var auditRequest = new UpdateFileMetadataRequestDTO();
         auditRequest.setAttachmentId(ATTACHMENT_ID);
 
@@ -659,10 +643,9 @@ class DocumentControllerTest extends AbstractTest {
         given()
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
-                .header(USERNAME_TOKEN, ADMIN)
-                .header(APM_HEADER_PARAM, createToken(ADMIN, "org1"))
+                .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(ContentType.JSON)
-                .body(MAPPER.writeValueAsString(List.of(auditRequest)))
+                .body(List.of(auditRequest))
                 .patch("/{documentId}/files/audit-log", DOCUMENT_ID)
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode());
@@ -670,7 +653,7 @@ class DocumentControllerTest extends AbstractTest {
 
     @Test
     @DisplayName("PATCH /{documentId}/files/audit-log - should return 500 when attachment service fails to create audit logs")
-    void createFailedAttachmentsAuditLogs_shouldReturnBadRequest_whenAuditFails() throws Exception {
+    void createFailedAttachmentsAuditLogs_shouldReturnBadRequest_whenAuditFails() {
         var auditRequest = new UpdateFileMetadataRequestDTO();
         auditRequest.setAttachmentId(ATTACHMENT_ID);
 
@@ -685,10 +668,9 @@ class DocumentControllerTest extends AbstractTest {
         given()
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
-                .header(USERNAME_TOKEN, ADMIN)
-                .header(APM_HEADER_PARAM, createToken(ADMIN, "org1"))
+                .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(ContentType.JSON)
-                .body(MAPPER.writeValueAsString(List.of(auditRequest)))
+                .body(List.of(auditRequest))
                 .patch("/{documentId}/files/audit-log", DOCUMENT_ID)
                 .then()
                 .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
@@ -698,7 +680,7 @@ class DocumentControllerTest extends AbstractTest {
 
     @Test
     @DisplayName("POST /search/show-all-documents - should return all matching documents")
-    void showAllDocumentsByCriteria_shouldReturnMatchingDocuments() throws Exception {
+    void showAllDocumentsByCriteria_shouldReturnMatchingDocuments() {
         var criteria = new DocumentSearchCriteriaDTO();
         criteria.setName("Test Document");
 
@@ -714,30 +696,29 @@ class DocumentControllerTest extends AbstractTest {
                 .respond(response()
                         .withStatusCode(Response.Status.OK.getStatusCode())
                         .withContentType(org.mockserver.model.MediaType.APPLICATION_JSON)
-                        .withBody(json(MAPPER.writeValueAsString(List.of(detail)))));
+                        .withBody(JsonBody.json(List.of(detail))));
 
         var response = given()
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
-                .header(USERNAME_TOKEN, ADMIN)
-                .header(APM_HEADER_PARAM, createToken(ADMIN, "org1"))
+                .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(ContentType.JSON)
-                .body(MAPPER.writeValueAsString(criteria))
+                .body(criteria)
                 .post("/search/show-all-documents")
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .extract()
                 .body()
-                .jsonPath();
+                .as(DocumentDetail[].class);
 
-        assertThat(response.getString("[0].id")).isEqualTo(DOCUMENT_ID);
+        assertThat(response[0].getId()).isEqualTo(DOCUMENT_ID);
     }
 
     // ==================== getDocumentByCriteria ====================
 
     @Test
     @DisplayName("POST /search - should return paged documents by criteria")
-    void getDocumentByCriteria_shouldReturnDocumentPage_whenCriteriaMatches() throws Exception {
+    void getDocumentByCriteria_shouldReturnDocumentPage_whenCriteriaMatches() {
         var criteria = new DocumentSearchCriteriaDTO();
         criteria.setName("Test Document");
         criteria.setPageNumber(0);
@@ -762,31 +743,30 @@ class DocumentControllerTest extends AbstractTest {
                 .respond(response()
                         .withStatusCode(Response.Status.OK.getStatusCode())
                         .withContentType(org.mockserver.model.MediaType.APPLICATION_JSON)
-                        .withBody(json(MAPPER.writeValueAsString(pageResult))));
+                        .withBody(JsonBody.json(pageResult)));
 
         var response = given()
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
-                .header(USERNAME_TOKEN, ADMIN)
-                .header(APM_HEADER_PARAM, createToken(ADMIN, "org1"))
+                .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(ContentType.JSON)
-                .body(MAPPER.writeValueAsString(criteria))
+                .body(criteria)
                 .post("/search")
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .extract()
                 .body()
-                .jsonPath();
+                .as(DocumentPageResultDTO.class);
 
-        assertThat(response.getInt("totalElements")).isEqualTo(1);
-        assertThat(response.getString("stream[0].id")).isEqualTo(DOCUMENT_ID);
+        assertThat(response.getTotalElements()).isEqualTo(1L);
+        assertThat(response.getStream().get(0).getId()).isEqualTo(DOCUMENT_ID);
     }
 
     // ==================== updateDocument ====================
 
     @Test
     @DisplayName("PUT /{id} - should return updated document")
-    void updateDocument_shouldReturnUpdatedDocument_whenRequestIsValid() throws Exception {
+    void updateDocument_shouldReturnUpdatedDocument_whenRequestIsValid() {
         var channelRequest = new ChannelCreateUpdateDTO();
         channelRequest.setName("WEB");
 
@@ -811,31 +791,30 @@ class DocumentControllerTest extends AbstractTest {
                 .respond(response()
                         .withStatusCode(Response.Status.OK.getStatusCode())
                         .withContentType(org.mockserver.model.MediaType.APPLICATION_JSON)
-                        .withBody(json(MAPPER.writeValueAsString(updatedDocument))));
+                        .withBody(JsonBody.json(updatedDocument)));
 
         var response = given()
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
-                .header(USERNAME_TOKEN, ADMIN)
-                .header(APM_HEADER_PARAM, createToken(ADMIN, "org1"))
+                .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(ContentType.JSON)
-                .body(MAPPER.writeValueAsString(updateRequest))
+                .body(updateRequest)
                 .put("/{id}", DOCUMENT_ID)
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .extract()
                 .body()
-                .jsonPath();
+                .as(DocumentDetail.class);
 
-        assertThat(response.getString("id")).isEqualTo(DOCUMENT_ID);
-        assertThat(response.getString("name")).isEqualTo("Updated Document");
+        assertThat(response.getId()).isEqualTo(DOCUMENT_ID);
+        assertThat(response.getName()).isEqualTo("Updated Document");
     }
 
     // ==================== bulkUpdateDocument ====================
 
     @Test
     @DisplayName("PUT /bulkupdate - should return updated document payload")
-    void bulkUpdateDocument_shouldReturnUpdatedDocument_whenRequestIsValid() throws Exception {
+    void bulkUpdateDocument_shouldReturnUpdatedDocument_whenRequestIsValid() {
         var channelRequest = new ChannelCreateUpdateDTO();
         channelRequest.setName("WEB");
 
@@ -845,42 +824,43 @@ class DocumentControllerTest extends AbstractTest {
         updateRequest.setTypeId("type-1");
         updateRequest.setChannel(channelRequest);
 
-        var updatedDocument = new DocumentDetailDTO();
+        var updatedDocument = new DocumentDetail();
         updatedDocument.setId(DOCUMENT_ID);
         updatedDocument.setName("Bulk Updated Document");
+        List<DocumentDetail> documentDetails = List.of(updatedDocument);
 
         mockServerClient
                 .when(request()
                         .withMethod("PUT")
-                        .withPath("/internal/document/bulkupdate"))
+                        .withPath("/internal/document/bulkupdate")
+                        .withContentType(MediaType.APPLICATION_JSON))
                 .withId(SVC_MOCK_ID)
                 .respond(response()
                         .withStatusCode(Response.Status.OK.getStatusCode())
-                        .withContentType(org.mockserver.model.MediaType.APPLICATION_JSON)
-                        .withBody(json(MAPPER.writeValueAsString(updatedDocument))));
+                        .withContentType(MediaType.APPLICATION_JSON)
+                        .withBody(JsonBody.json(documentDetails)));
 
         var response = given()
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
-                .header(USERNAME_TOKEN, ADMIN)
-                .header(APM_HEADER_PARAM, createToken(ADMIN, "org1"))
+                .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(ContentType.JSON)
-                .body(MAPPER.writeValueAsString(List.of(updateRequest)))
+                .body(updateRequest)
                 .put("/bulkupdate")
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .extract()
                 .body()
-                .jsonPath();
+                .as(DocumentDetailDTO[].class);
 
-        assertThat(response.getString("id")).isEqualTo(DOCUMENT_ID);
+        assertThat(response[0].getId()).isEqualTo(DOCUMENT_ID);
     }
 
     // ==================== createDocument ====================
 
     @Test
     @DisplayName("POST / - should create document and return payload")
-    void createDocument_shouldReturnCreatedDocument_whenRequestIsValid() throws Exception {
+    void createDocument_shouldReturnCreatedDocument_whenRequestIsValid() {
         var channelRequest = new ChannelCreateUpdateDTO();
         channelRequest.setName("WEB");
 
@@ -901,31 +881,30 @@ class DocumentControllerTest extends AbstractTest {
                 .respond(response()
                         .withStatusCode(Response.Status.CREATED.getStatusCode())
                         .withContentType(org.mockserver.model.MediaType.APPLICATION_JSON)
-                        .withBody(json(MAPPER.writeValueAsString(createdDocument))));
+                        .withBody(JsonBody.json(createdDocument)));
 
         var response = given()
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
-                .header(USERNAME_TOKEN, ADMIN)
-                .header(APM_HEADER_PARAM, createToken(ADMIN, "org1"))
+                .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(ContentType.JSON)
-                .body(MAPPER.writeValueAsString(createRequest))
+                .body(createRequest)
                 .post()
                 .then()
                 .statusCode(Response.Status.CREATED.getStatusCode())
                 .extract()
                 .body()
-                .jsonPath();
+                .as(DocumentDetail.class);
 
-        assertThat(response.getString("id")).isEqualTo(DOCUMENT_ID);
-        assertThat(response.getString("name")).isEqualTo("Created Document");
+        assertThat(response.getId()).isEqualTo(DOCUMENT_ID);
+        assertThat(response.getName()).isEqualTo("Created Document");
     }
 
     // ==================== getFailedAttachmentData ====================
 
     @Test
     @DisplayName("GET /files/upload/failed/{id} - should return failed attachment audit entries")
-    void getFailedAttachmentData_shouldReturnAuditEntries_whenDataExists() throws Exception {
+    void getFailedAttachmentData_shouldReturnAuditEntries_whenDataExists() {
         var failedAudit = new StorageUploadAuditDTO();
         failedAudit.setAttachmentId(ATTACHMENT_ID);
         failedAudit.setDocumentId(DOCUMENT_ID);
@@ -939,30 +918,29 @@ class DocumentControllerTest extends AbstractTest {
                 .respond(response()
                         .withStatusCode(Response.Status.OK.getStatusCode())
                         .withContentType(org.mockserver.model.MediaType.APPLICATION_JSON)
-                        .withBody(json(MAPPER.writeValueAsString(List.of(failedAudit)))));
+                        .withBody(JsonBody.json(List.of(failedAudit))));
 
         var response = given()
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
-                .header(USERNAME_TOKEN, ADMIN)
-                .header(APM_HEADER_PARAM, createToken(ADMIN, "org1"))
+                .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(ContentType.JSON)
                 .get("/files/upload/failed/{id}", DOCUMENT_ID)
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .extract()
                 .body()
-                .jsonPath();
+                .as(StorageUploadAuditDTO[].class);
 
-        assertThat(response.getString("[0].attachmentId")).isEqualTo(ATTACHMENT_ID);
-        assertThat(response.getString("[0].documentId")).isEqualTo(DOCUMENT_ID);
+        assertThat(response[0].getAttachmentId()).isEqualTo(ATTACHMENT_ID);
+        assertThat(response[0].getDocumentId()).isEqualTo(DOCUMENT_ID);
     }
 
     // ==================== getAllChannels ====================
 
     @Test
     @DisplayName("GET /channels - should return available channels")
-    void getAllChannels_shouldReturnChannels_whenServiceRespondsOk() throws Exception {
+    void getAllChannels_shouldReturnChannels_whenServiceRespondsOk() {
         var channel = new ChannelDTO();
         channel.setId("channel-id");
         channel.setName("WEB");
@@ -975,30 +953,29 @@ class DocumentControllerTest extends AbstractTest {
                 .respond(response()
                         .withStatusCode(Response.Status.OK.getStatusCode())
                         .withContentType(org.mockserver.model.MediaType.APPLICATION_JSON)
-                        .withBody(json(MAPPER.writeValueAsString(List.of(channel)))));
+                        .withBody(JsonBody.json(List.of(channel))));
 
         var response = given()
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
-                .header(USERNAME_TOKEN, ADMIN)
-                .header(APM_HEADER_PARAM, createToken(ADMIN, "org1"))
+                .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(ContentType.JSON)
                 .get("/channels")
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .extract()
                 .body()
-                .jsonPath();
+                .as(ChannelDTO[].class);
 
-        assertThat(response.getString("[0].id")).isEqualTo("channel-id");
-        assertThat(response.getString("[0].name")).isEqualTo("WEB");
+        assertThat(response[0].getId()).isEqualTo("channel-id");
+        assertThat(response[0].getName()).isEqualTo("WEB");
     }
 
     // ==================== getDocumentById ====================
 
     @Test
     @DisplayName("GET /{id} - should return document by id")
-    void getDocumentById_shouldReturnDocument_whenServiceRespondsOk() throws Exception {
+    void getDocumentById_shouldReturnDocument_whenServiceRespondsOk() {
         var document = new DocumentDetailDTO();
         document.setId(DOCUMENT_ID);
         document.setName("Test Document");
@@ -1011,30 +988,29 @@ class DocumentControllerTest extends AbstractTest {
                 .respond(response()
                         .withStatusCode(Response.Status.OK.getStatusCode())
                         .withContentType(org.mockserver.model.MediaType.APPLICATION_JSON)
-                        .withBody(json(MAPPER.writeValueAsString(document))));
+                        .withBody(JsonBody.json(document)));
 
         var response = given()
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
-                .header(USERNAME_TOKEN, ADMIN)
-                .header(APM_HEADER_PARAM, createToken(ADMIN, "org1"))
+                .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(ContentType.JSON)
                 .get("/{id}", DOCUMENT_ID)
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .extract()
                 .body()
-                .jsonPath();
+                .as(DocumentDetail.class);
 
-        assertThat(response.getString("id")).isEqualTo(DOCUMENT_ID);
-        assertThat(response.getString("name")).isEqualTo("Test Document");
+        assertThat(response.getId()).isEqualTo(DOCUMENT_ID);
+        assertThat(response.getName()).isEqualTo("Test Document");
     }
 
     // ==================== deleteBulkDocuments ====================
 
     @Test
     @DisplayName("DELETE /delete-bulk-documents - should return 204 when bulk delete succeeds")
-    void deleteBulkDocuments_shouldReturnNoContent_whenServiceRespondsNoContent() throws Exception {
+    void deleteBulkDocuments_shouldReturnNoContent_whenServiceRespondsNoContent() {
         mockServerClient
                 .when(request()
                         .withMethod("DELETE")
@@ -1046,10 +1022,9 @@ class DocumentControllerTest extends AbstractTest {
         given()
                 .when()
                 .auth().oauth2(keycloakClient.getAccessToken(ADMIN))
-                .header(USERNAME_TOKEN, ADMIN)
-                .header(APM_HEADER_PARAM, createToken(ADMIN, "org1"))
+                .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(ContentType.JSON)
-                .body(MAPPER.writeValueAsString(List.of(DOCUMENT_ID)))
+                .body(List.of(DOCUMENT_ID))
                 .delete("/delete-bulk-documents")
                 .then()
                 .statusCode(Response.Status.NO_CONTENT.getStatusCode());
