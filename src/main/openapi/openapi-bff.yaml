@@ -1,0 +1,1551 @@
+---
+openapi: 3.0.3
+info:
+  title: OneCX Document BFF
+  description: OneCX Document Backend For Frontend API
+  version: '1.0'
+servers:
+  - url: http://onecx-document-bff:8080/
+tags:
+  - name: DocumentController
+  - name: DocumentSpecificationController
+  - name: DocumentTypeController
+  - name: SupportedMimeTypeController
+
+paths:
+  /document:
+    post:
+      x-onecx:
+        permissions:
+          document:
+            - write
+      tags:
+        - DocumentController
+      description: Create Document
+      operationId: createDocument
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentCreateUpdate'
+      responses:
+        '201':
+          description: Created Document resource
+          headers:
+            Location:
+              description: URL of the entity created
+              style: simple
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentDetail'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetailResponse'
+  /document/search:
+    post:
+      x-onecx:
+        permissions:
+          document:
+            - read
+      tags:
+        - DocumentController
+      description: Gets documents by criteria
+      operationId: getDocumentByCriteria
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentSearchCriteria'
+      responses:
+        '200':
+          description: The corresponding documents resource
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentPageResult'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetailResponse'
+  /document-specification:
+    get:
+      x-onecx:
+        permissions:
+          document:
+            - read
+      tags:
+        - DocumentSpecificationController
+      description: Finds all specification of documents
+      operationId: getAllDocumentSpecifications
+      responses:
+        '200':
+          description: Found all specification of documents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DocumentSpecification'
+        '404':
+          description: Not found
+    post:
+      x-onecx:
+        permissions:
+          document:
+            - write
+      tags:
+        - DocumentSpecificationController
+      description: Creates specification of document
+      operationId: createDocumentSpecification
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentSpecificationCreateUpdate'
+      responses:
+        '201':
+          description: Created specification of document
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentSpecification'
+        '404':
+          description: Not found
+  /document-specification/{id}:
+    get:
+      x-onecx:
+        permissions:
+          document:
+            - read
+      tags:
+        - DocumentSpecificationController
+      description: Gets document specification by id
+      operationId: getDocumentSpecificationById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentSpecification'
+        '404':
+          description: Not found
+    put:
+      x-onecx:
+        permissions:
+          document:
+            - write
+      tags:
+        - DocumentSpecificationController
+      description: Updates specification of document by id
+      operationId: updateDocumentSpecificationById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentSpecificationCreateUpdate'
+      responses:
+        '200':
+          description: Updated specification of document by id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentSpecification'
+        '404':
+          description: Not found
+    delete:
+      x-onecx:
+        permissions:
+          document:
+            - delete
+      tags:
+        - DocumentSpecificationController
+      description: Deletes specification of document by id
+      operationId: deleteDocumentSpecificationById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Deleted specification of document by id
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetailResponse'
+        '404':
+          description: Not found
+  /document-type:
+    get:
+      x-onecx:
+        permissions:
+          document:
+            - read
+      tags:
+        - DocumentTypeController
+      description: Finds all types of document
+      operationId: getAllTypesOfDocument
+      responses:
+        '200':
+          description: Found all types of document
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DocumentType'
+        '404':
+          description: Not found
+    post:
+      x-onecx:
+        permissions:
+          document:
+            - write
+      tags:
+        - DocumentTypeController
+      description: Creates type of document
+      operationId: createDocumentType
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentTypeCreateUpdate'
+      responses:
+        '201':
+          description: Created type of document
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentType'
+        '404':
+          description: Not found
+  /document-type/{id}:
+    get:
+      x-onecx:
+        permissions:
+          document:
+            - read
+      tags:
+        - DocumentTypeController
+      description: Gets document type by id
+      operationId: getDocumentTypeById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentType'
+        '404':
+          description: Not found
+    put:
+      x-onecx:
+        permissions:
+          document:
+            - write
+      tags:
+        - DocumentTypeController
+      description: Updates type of document by id
+      operationId: updateDocumentTypeById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentTypeCreateUpdate'
+      responses:
+        '201':
+          description: Updated type of document by id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentType'
+        '404':
+          description: Not found
+    delete:
+      x-onecx:
+        permissions:
+          document:
+            - delete
+      tags:
+        - DocumentTypeController
+      description: Deletes type of document by id
+      operationId: deleteDocumentTypeById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Deleted type of document by id
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetailResponse'
+        '404':
+          description: Not found
+  /document/bulkupdate:
+    put:
+      x-onecx:
+        permissions:
+          document:
+            - write
+      tags:
+        - DocumentController
+      description: Bulk Update an document
+      operationId: bulkUpdateDocument
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/DocumentCreateUpdate'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DocumentDetail'
+        '404':
+          description: Not found
+  /document/channels:
+    get:
+      x-onecx:
+        permissions:
+          document:
+            - read
+      tags:
+        - DocumentController
+      description: Gets all channels
+      operationId: getAllChannels
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Channel'
+  /document/delete-bulk-documents:
+    delete:
+      x-onecx:
+        permissions:
+          document:
+            - delete
+      tags:
+        - DocumentController
+      description: Delete Multiple Document by Ids
+      operationId: deleteBulkDocuments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+      responses:
+        '204':
+          description: Delete Documents by ids
+        '404':
+          description: Not found
+  /document/file/{attachmentId}:
+    get:
+      x-onecx:
+        permissions:
+          document:
+            - read
+      tags:
+        - DocumentController
+      description: Get attachment's file
+      operationId: getFile
+      parameters:
+        - name: attachmentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttachmentPresignedUrlResponse'
+        '404':
+          description: Not found
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetailResponse'
+  /document/{documentId}/files/metadata:
+    patch:
+      x-onecx:
+        permissions:
+          document:
+            - write
+      tags:
+        - DocumentController
+      operationId: updateAttachmentsMetadata
+      description: Update attachment metadata for specified document
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/UpdateFileMetadataRequest'
+      responses:
+        '200':
+          description: Metadata updated
+  /document/{documentId}/files/audit-log:
+    patch:
+      x-onecx:
+        permissions:
+          document:
+            - write
+      tags:
+        - DocumentController
+      operationId: createFailedAttachmentsAuditLogs
+      description: Create audit logs for failed attachments
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/UpdateFileMetadataRequest'
+      responses:
+        '201':
+          description: Audit logs created
+  /document/files/upload/failed/{id}:
+    get:
+      x-onecx:
+        permissions:
+          document:
+            - read
+      tags:
+        - DocumentController
+      description: Get data of all the failed attachment based on document ID
+      operationId: getFailedAttachmentData
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StorageUploadAudit'
+        '404':
+          description: Not found
+  /document/search/show-all-documents:
+    post:
+      x-onecx:
+        permissions:
+          document:
+            - read
+      tags:
+        - DocumentController
+      description: Gets all documents by criteria
+      operationId: showAllDocumentsByCriteria
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentSearchCriteria'
+      responses:
+        '200':
+          description: The corresponding documents resource
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DocumentDetail'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetailResponse'
+  /document/{id}:
+    get:
+      x-onecx:
+        permissions:
+          document:
+            - read
+      tags:
+        - DocumentController
+      description: Gets Document by Id
+      operationId: getDocumentById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentDetail'
+        '404':
+          description: Not found
+    put:
+      x-onecx:
+        permissions:
+          document:
+            - write
+      tags:
+        - DocumentController
+      description: Update an document
+      operationId: updateDocument
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentCreateUpdate'
+      responses:
+        '200':
+          description: DocumentDetail updated
+          headers:
+            Location:
+              required: true
+              schema:
+                type: string
+                format: url
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentDetail'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetailResponse'
+        '404':
+          description: DocumentDetail not found
+    delete:
+      x-onecx:
+        permissions:
+          document:
+            - delete
+      tags:
+        - DocumentController
+      description: Delete Document by Id
+      operationId: deleteDocumentById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Deleted Document by id
+        '404':
+          description: Not found
+  /supported-mime-type:
+    get:
+      x-onecx:
+        permissions:
+          document:
+            - read
+      tags:
+        - SupportedMimeTypeController
+      description: Finds all supported mime-types
+      operationId: getAllSupportedMimeTypes
+      responses:
+        '200':
+          description: Found all supported mime-types
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SupportedMimeType'
+        '404':
+          description: Not found
+    post:
+      x-onecx:
+        permissions:
+          document:
+            - write
+      tags:
+        - SupportedMimeTypeController
+      description: Creates supported mime-type
+      operationId: createSupportedMimeType
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SupportedMimeTypeCreateUpdate'
+      responses:
+        '201':
+          description: Created supported mime-type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupportedMimeType'
+        '404':
+          description: Not found
+  /supported-mime-type/{id}:
+    get:
+      x-onecx:
+        permissions:
+          document:
+            - read
+      tags:
+        - SupportedMimeTypeController
+      description: Gets supported mime-type by id
+      operationId: getSupportedMimeTypeById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupportedMimeType'
+        '404':
+          description: Not found
+    put:
+      x-onecx:
+        permissions:
+          document:
+            - write
+      tags:
+        - SupportedMimeTypeController
+      description: Updates supported mime-type by id
+      operationId: updateSupportedMimeTypeById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SupportedMimeTypeCreateUpdate'
+      responses:
+        '200':
+          description: Updated supported mime-type by id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupportedMimeType'
+        '404':
+          description: Not found
+    delete:
+      x-onecx:
+        permissions:
+          document:
+            - delete
+      tags:
+        - SupportedMimeTypeController
+      description: Deletes supported mime-type by id
+      operationId: deleteSupportedMimeTypeId
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Deleted supported mime-type by id
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetailResponse'
+        '404':
+          description: Not found
+  /document/files/upload/{documentId}:
+    post:
+      x-onecx:
+        permissions:
+          document:
+            - write
+      tags:
+        - DocumentController
+      operationId: uploadAllFiles
+      description: uploads all the files
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/UploadAttachmentPresignedUrlRequest'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UploadAttachmentPresignedUrlResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetailResponse'
+        '404':
+          description: Not found
+components:
+  schemas:
+    AttachmentCreateUpdate:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+        validFor:
+          $ref: '#/components/schemas/TimePeriod'
+        mimeTypeId:
+          type: string
+        file:
+          type: string
+        fileName:
+          type: string
+    Attachment:
+      type: object
+      properties:
+        modificationCount:
+          format: int32
+          type: integer
+        creationDate:
+          $ref: '#/components/schemas/OffsetDateTime'
+        creationUser:
+          type: string
+        modificationDate:
+          $ref: '#/components/schemas/OffsetDateTime'
+        modificationUser:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+        size:
+          type: number
+        sizeUnit:
+          $ref: '#/components/schemas/AttachmentUnit'
+        validFor:
+          $ref: '#/components/schemas/TimePeriod'
+        storage:
+          type: string
+        externalStorageURL:
+          type: string
+        mimeType:
+          $ref: '#/components/schemas/SupportedMimeType'
+        fileName:
+          type: string
+        storageUploadStatus:
+          type: boolean
+    AttachmentUnit:
+      enum:
+        - BYTES
+      type: string
+    CategoryCreateUpdate:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        categoryVersion:
+          type: string
+    Category:
+      type: object
+      properties:
+        modificationCount:
+          format: int32
+          type: integer
+        creationDate:
+          $ref: '#/components/schemas/OffsetDateTime'
+        creationUser:
+          type: string
+        modificationDate:
+          $ref: '#/components/schemas/OffsetDateTime'
+        modificationUser:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+        categoryVersion:
+          type: string
+    ChannelCreateUpdate:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+    Channel:
+      type: object
+      properties:
+        modificationCount:
+          format: int32
+          type: integer
+        creationDate:
+          $ref: '#/components/schemas/OffsetDateTime'
+        creationUser:
+          type: string
+        modificationDate:
+          $ref: '#/components/schemas/OffsetDateTime'
+        modificationUser:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+    DocumentCharacteristicCreateUpdate:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        value:
+          type: string
+    DocumentCharacteristic:
+      type: object
+      properties:
+        modificationCount:
+          format: int32
+          type: integer
+        creationDate:
+          $ref: '#/components/schemas/OffsetDateTime'
+        creationUser:
+          type: string
+        modificationDate:
+          $ref: '#/components/schemas/OffsetDateTime'
+        modificationUser:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+        value:
+          type: string
+    DocumentCreateUpdate:
+      required:
+        - name
+        - typeId
+        - channel
+      type: object
+      properties:
+        modificationCount:
+          format: int32
+          type: integer
+        creationDate:
+          $ref: '#/components/schemas/OffsetDateTime'
+        creationUser:
+          type: string
+        modificationDate:
+          $ref: '#/components/schemas/OffsetDateTime'
+        modificationUser:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        lifeCycleState:
+          $ref: '#/components/schemas/LifeCycleState'
+        documentVersion:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        typeId:
+          type: string
+        specification:
+          $ref: '#/components/schemas/DocumentSpecificationCreateUpdate'
+        channel:
+          $ref: '#/components/schemas/ChannelCreateUpdate'
+        documentRelationships:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentRelationshipCreateUpdate'
+        characteristics:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentCharacteristicCreateUpdate'
+        relatedParties:
+          type: array
+          items:
+            $ref: '#/components/schemas/RelatedPartyRefCreateUpdate'
+        relatedObject:
+          $ref: '#/components/schemas/RelatedObjectRefCreateUpdate'
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoryCreateUpdate'
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttachmentCreateUpdate'
+    DocumentDetail:
+      type: object
+      properties:
+        modificationCount:
+          format: int32
+          type: integer
+        creationDate:
+          $ref: '#/components/schemas/OffsetDateTime'
+        creationUser:
+          type: string
+        modificationDate:
+          $ref: '#/components/schemas/OffsetDateTime'
+        modificationUser:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        lifeCycleState:
+          $ref: '#/components/schemas/LifeCycleState'
+        documentVersion:
+          type: string
+        channel:
+          $ref: '#/components/schemas/Channel'
+        tags:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+        type:
+          $ref: '#/components/schemas/DocumentType'
+        specification:
+          $ref: '#/components/schemas/DocumentSpecification'
+        documentRelationships:
+          uniqueItems: true
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentRelationship'
+        characteristics:
+          uniqueItems: true
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentCharacteristic'
+        relatedParties:
+          uniqueItems: true
+          type: array
+          items:
+            $ref: '#/components/schemas/RelatedPartyRef'
+        relatedObject:
+          $ref: '#/components/schemas/RelatedObjectRef'
+        categories:
+          uniqueItems: true
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attachment'
+    DocumentSearchCriteria:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        lifeCycleState:
+          type: array
+          items:
+            $ref: '#/components/schemas/LifeCycleState'
+        documentTypeId:
+          type: array
+          items:
+            type: string
+        channelName:
+          type: string
+        startDate:
+          type: string
+        endDate:
+          type: string
+        createBy:
+          type: string
+        objectReferenceId:
+          type: string
+        objectReferenceType:
+          type: string
+        pageNumber:
+          type: integer
+          minimum: 0
+          default: 0
+        pageSize:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 200
+    DocumentRelationshipCreateUpdate:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        documentRefId:
+          type: string
+    DocumentRelationship:
+      type: object
+      properties:
+        modificationCount:
+          format: int32
+          type: integer
+        creationDate:
+          $ref: '#/components/schemas/OffsetDateTime'
+        creationUser:
+          type: string
+        modificationDate:
+          $ref: '#/components/schemas/OffsetDateTime'
+        modificationUser:
+          type: string
+        id:
+          type: string
+        type:
+          type: string
+        documentRefId:
+          type: string
+    DocumentSpecificationCreateUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        specificationVersion:
+          type: string
+    DocumentSpecification:
+      type: object
+      properties:
+        modificationCount:
+          format: int32
+          type: integer
+        creationDate:
+          $ref: '#/components/schemas/OffsetDateTime'
+        creationUser:
+          type: string
+        modificationDate:
+          $ref: '#/components/schemas/OffsetDateTime'
+        modificationUser:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+        specificationVersion:
+          type: string
+    DocumentTypeCreateUpdate:
+      required:
+        - name
+      type: object
+      properties:
+        name:
+          type: string
+    DocumentType:
+      type: object
+      properties:
+        modificationCount:
+          format: int32
+          type: integer
+        creationDate:
+          $ref: '#/components/schemas/OffsetDateTime'
+        creationUser:
+          type: string
+        modificationDate:
+          $ref: '#/components/schemas/OffsetDateTime'
+        modificationUser:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+    File:
+      type: object
+      properties:
+        path:
+          type: string
+        invalid:
+          type: boolean
+        name:
+          type: string
+        parent:
+          type: string
+        parentFile:
+          $ref: '#/components/schemas/File'
+        absolute:
+          type: boolean
+        absolutePath:
+          type: string
+        absoluteFile:
+          $ref: '#/components/schemas/File'
+        canonicalPath:
+          type: string
+        canonicalFile:
+          $ref: '#/components/schemas/File'
+        directory:
+          type: boolean
+        file:
+          type: boolean
+        hidden:
+          type: boolean
+        totalSpace:
+          format: int64
+          type: integer
+        freeSpace:
+          format: int64
+          type: integer
+        usableSpace:
+          format: int64
+          type: integer
+    LifeCycleState:
+      enum:
+        - DRAFT
+        - REVIEW
+        - RELEASED
+        - ARCHIVED
+      type: string
+    OffsetDateTime:
+      format: date-time
+      type: string
+      example: 2022-03-10T12:15:50-04:00
+    DocumentPageResult:
+      type: object
+      properties:
+        totalElements:
+          format: int64
+          type: integer
+        number:
+          format: int32
+          type: integer
+        size:
+          format: int32
+          type: integer
+        totalPages:
+          format: int64
+          type: integer
+        stream:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentDetail'
+    RelatedObjectRefCreateUpdate:
+      type: object
+      properties:
+        id:
+          type: string
+        involvement:
+          type: string
+        objectReferenceType:
+          type: string
+        objectReferenceId:
+          type: string
+    RelatedObjectRef:
+      type: object
+      properties:
+        modificationCount:
+          format: int32
+          type: integer
+        creationDate:
+          $ref: '#/components/schemas/OffsetDateTime'
+        creationUser:
+          type: string
+        modificationDate:
+          $ref: '#/components/schemas/OffsetDateTime'
+        modificationUser:
+          type: string
+        id:
+          type: string
+        involvement:
+          type: string
+        objectReferenceType:
+          type: string
+        objectReferenceId:
+          type: string
+    RelatedPartyRefCreateUpdate:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+        validFor:
+          $ref: '#/components/schemas/TimePeriod'
+    RelatedPartyRef:
+      type: object
+      properties:
+        modificationCount:
+          format: int32
+          type: integer
+        creationDate:
+          $ref: '#/components/schemas/OffsetDateTime'
+        creationUser:
+          type: string
+        modificationDate:
+          $ref: '#/components/schemas/OffsetDateTime'
+        modificationUser:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+        validFor:
+          $ref: '#/components/schemas/TimePeriod'
+    RestException:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/Status'
+        errorCode:
+          type: object
+        parameters:
+          type: array
+          items:
+            type: object
+        namedParameters:
+          type: object
+          additionalProperties:
+            type: object
+    Status:
+      enum:
+        - OK
+        - CREATED
+        - ACCEPTED
+        - NO_CONTENT
+        - RESET_CONTENT
+        - PARTIAL_CONTENT
+        - MOVED_PERMANENTLY
+        - FOUND
+        - SEE_OTHER
+        - NOT_MODIFIED
+        - USE_PROXY
+        - TEMPORARY_REDIRECT
+        - BAD_REQUEST
+        - UNAUTHORIZED
+        - PAYMENT_REQUIRED
+        - FORBIDDEN
+        - NOT_FOUND
+        - METHOD_NOT_ALLOWED
+        - NOT_ACCEPTABLE
+        - PROXY_AUTHENTICATION_REQUIRED
+        - REQUEST_TIMEOUT
+        - CONFLICT
+        - GONE
+        - LENGTH_REQUIRED
+        - PRECONDITION_FAILED
+        - REQUEST_ENTITY_TOO_LARGE
+        - REQUEST_URI_TOO_LONG
+        - UNSUPPORTED_MEDIA_TYPE
+        - REQUESTED_RANGE_NOT_SATISFIABLE
+        - EXPECTATION_FAILED
+        - PRECONDITION_REQUIRED
+        - TOO_MANY_REQUESTS
+        - REQUEST_HEADER_FIELDS_TOO_LARGE
+        - INTERNAL_SERVER_ERROR
+        - NOT_IMPLEMENTED
+        - BAD_GATEWAY
+        - SERVICE_UNAVAILABLE
+        - GATEWAY_TIMEOUT
+        - HTTP_VERSION_NOT_SUPPORTED
+        - NETWORK_AUTHENTICATION_REQUIRED
+      type: string
+    StorageUploadAudit:
+      type: object
+      properties:
+        modificationCount:
+          format: int32
+          type: integer
+        creationDate:
+          $ref: '#/components/schemas/OffsetDateTime'
+        creationUser:
+          type: string
+        modificationDate:
+          $ref: '#/components/schemas/OffsetDateTime'
+        modificationUser:
+          type: string
+        id:
+          type: string
+        documentId:
+          type: string
+        documentName:
+          type: string
+        documentDescription:
+          type: string
+        documentVersion:
+          type: string
+        lifeCycleState:
+          type: string
+        channelId:
+          type: string
+        channelName:
+          type: string
+        documentTypeId:
+          type: string
+        documentTypeName:
+          type: string
+        attachmentId:
+          type: string
+        fileName:
+          type: string
+        name:
+          type: string
+        attachmentDescription:
+          type: string
+        mimeTypeId:
+          type: string
+        mimeTypeName:
+          type: string
+        specificationId:
+          type: string
+        specificationName:
+          type: string
+        relatedObjectId:
+          type: string
+        involvement:
+          type: string
+        objectReferenceType:
+          type: string
+        objectReferenceId:
+          type: string
+    SupportedMimeTypeCreateUpdate:
+      required:
+        - name
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+    SupportedMimeType:
+      type: object
+      properties:
+        modificationCount:
+          format: int32
+          type: integer
+        creationDate:
+          $ref: '#/components/schemas/OffsetDateTime'
+        creationUser:
+          type: string
+        modificationDate:
+          $ref: '#/components/schemas/OffsetDateTime'
+        modificationUser:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+    TimePeriod:
+      type: object
+      properties:
+        startDateTime:
+          $ref: '#/components/schemas/OffsetDateTime'
+        endDateTime:
+          $ref: '#/components/schemas/OffsetDateTime'
+    Traceable:
+      type: object
+      properties:
+        createdBy:
+          type: string
+        createdDate:
+          type: string
+          format: date-time
+        lastModifiedBy:
+          type: string
+        lastModifiedDate:
+          type: string
+          format: date-time
+    DocumentResponse:
+      allOf:
+        - $ref: '#/components/schemas/Traceable'
+        - type: object
+          properties:
+            attachmentResponse:
+              type: object
+              additionalProperties:
+                type: integer
+              description: Map of attachment names to their response codes
+    AttachmentPresignedUrlResponse:
+      properties:
+        url:
+          type: string
+        expiration:
+          type: string
+          format: date-time
+    UploadAttachmentPresignedUrlRequest:
+      properties:
+        fileName:
+          type: string
+        attachmentId:
+          type: string
+    UploadAttachmentPresignedUrlResponse:
+      properties:
+        url:
+          type: string
+        expiration:
+          type: string
+          format: date-time
+        attachmentId:
+          type: string
+    UpdateFileMetadataRequest:
+      type: object
+      properties:
+        attachmentId:
+          type: string
+    FileMultipartBody:
+      type: object
+      properties:
+        file:
+          type: File
+    FileInfo:
+      type: object
+      properties:
+        contentType:
+          type: string
+          description: Type of file based on the InputStream.
+        path:
+          type: string
+          description: The path of the file.
+        bucket:
+          type: string
+          description: Name of bucket.
+    ProblemDetailResponse:
+      type: object
+      properties:
+        errorCode:
+          type: string
+        detail:
+          type: string
+        params:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProblemDetailParam'
+        invalidParams:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProblemDetailInvalidParam'
+    ProblemDetailParam:
+      type: object
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+    ProblemDetailInvalidParam:
+      type: object
+      properties:
+        name:
+          type: string
+        message:
+          type: string
