@@ -1,6 +1,7 @@
 package org.tkit.onecx.document.bff;
 
 import org.eclipse.microprofile.config.ConfigProvider;
+import org.mockserver.serialization.ObjectMapperFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -12,6 +13,7 @@ import io.quarkus.test.keycloak.client.KeycloakTestClient;
 import io.restassured.RestAssured;
 import io.restassured.config.ObjectMapperConfig;
 import io.restassured.config.RestAssuredConfig;
+import shaded_package.com.fasterxml.jackson.annotation.JsonInclude;
 
 @QuarkusTestResource(MockServerTestResource.class)
 public abstract class AbstractTest {
@@ -30,6 +32,7 @@ public abstract class AbstractTest {
                             objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
                             return objectMapper;
                         }));
+        ObjectMapperFactory.createObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL);
     }
 
 }

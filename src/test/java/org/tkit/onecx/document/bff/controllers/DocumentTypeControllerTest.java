@@ -44,7 +44,7 @@ class DocumentTypeControllerTest extends AbstractTest {
             mockServerClient.clear(SVC_MOCK_ID);
             mockServerClient.clear(FILE_STORAGE_MOCK_ID);
             mockServerClient.clear(SEC_SVC_MOCK_ID);
-        } catch (Exception e) {
+        } catch (Exception _) {
             // mockid not existing
         }
     }
