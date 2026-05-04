@@ -636,110 +636,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/SupportedMimeType'
-        '404':
-          description: Not found
-    post:
-      x-onecx:
-        permissions:
-          document:
-            - write
-      tags:
-        - SupportedMimeTypeController
-      description: Creates supported mime-type
-      operationId: createSupportedMimeType
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SupportedMimeTypeCreateUpdate'
-      responses:
-        '201':
-          description: Created supported mime-type
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SupportedMimeType'
-        '404':
-          description: Not found
-  /supported-mime-type/{id}:
-    get:
-      x-onecx:
-        permissions:
-          document:
-            - read
-      tags:
-        - SupportedMimeTypeController
-      description: Gets supported mime-type by id
-      operationId: getSupportedMimeTypeById
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Ok
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SupportedMimeType'
-        '404':
-          description: Not found
-    put:
-      x-onecx:
-        permissions:
-          document:
-            - write
-      tags:
-        - SupportedMimeTypeController
-      description: Updates supported mime-type by id
-      operationId: updateSupportedMimeTypeById
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SupportedMimeTypeCreateUpdate'
-      responses:
-        '200':
-          description: Updated supported mime-type by id
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SupportedMimeType'
-        '404':
-          description: Not found
-    delete:
-      x-onecx:
-        permissions:
-          document:
-            - delete
-      tags:
-        - SupportedMimeTypeController
-      description: Deletes supported mime-type by id
-      operationId: deleteSupportedMimeTypeId
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '204':
-          description: Deleted supported mime-type by id
-        '400':
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetailResponse'
+                  type: string
         '404':
           description: Not found
   /document/files/upload/{documentId}:
@@ -798,7 +695,7 @@ components:
           type: string
         validFor:
           $ref: '#/components/schemas/TimePeriod'
-        mimeTypeId:
+        mimeType:
           type: string
         file:
           type: string
@@ -837,7 +734,7 @@ components:
         externalStorageURL:
           type: string
         mimeType:
-          $ref: '#/components/schemas/SupportedMimeType'
+          type: string
         fileName:
           type: string
         storageUploadStatus:
@@ -1409,9 +1306,7 @@ components:
           type: string
         attachmentDescription:
           type: string
-        mimeTypeId:
-          type: string
-        mimeTypeName:
+        mimeType:
           type: string
         specificationId:
           type: string
@@ -1424,35 +1319,6 @@ components:
         objectReferenceType:
           type: string
         objectReferenceId:
-          type: string
-    SupportedMimeTypeCreateUpdate:
-      required:
-        - name
-      type: object
-      properties:
-        name:
-          type: string
-        description:
-          type: string
-    SupportedMimeType:
-      type: object
-      properties:
-        modificationCount:
-          format: int32
-          type: integer
-        creationDate:
-          $ref: '#/components/schemas/OffsetDateTime'
-        creationUser:
-          type: string
-        modificationDate:
-          $ref: '#/components/schemas/OffsetDateTime'
-        modificationUser:
-          type: string
-        id:
-          type: string
-        name:
-          type: string
-        description:
           type: string
     TimePeriod:
       type: object
