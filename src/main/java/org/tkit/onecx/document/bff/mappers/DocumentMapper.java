@@ -42,12 +42,6 @@ public interface DocumentMapper {
 
     DocumentTypeCreateUpdate map(DocumentTypeCreateUpdateDTO documentTypeCreateUpdateDTO);
 
-    SupportedMimeType map(SupportedMimeTypeDTO supportedMimeTypeDTO);
-
-    List<SupportedMimeType> mapMimeTypeList(List<SupportedMimeTypeDTO> supportedMimeTypeDTOS);
-
-    SupportedMimeTypeCreateUpdate map(SupportedMimeTypeCreateUpdateDTO supportedMimeTypeCreateUpdateDTO);
-
     DocumentDetail map(DocumentDetailDTO documentDetailDTO);
 
     List<DocumentDetail> mapDetailList(List<DocumentDetailDTO> documentDetailDTOList);
